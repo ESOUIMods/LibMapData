@@ -8,6 +8,8 @@ lib.mapNames = {}
 lib.mapNamesLookup = {}
 lib.zoneNames = {}
 lib.zoneNamesLookup = {}
+lib.textureNames = {}
+lib.textureNamesLookup = {}
 lib.zoneIndex = nil
 lib.mapIndex = nil
 lib.mapId = nil
@@ -20,6 +22,8 @@ lib.isDungeon = nil
 lib.zoneName = nil
 lib.mapName = nil
 lib.subzoneName = nil
+lib.currentFloor = nil
+lib.numFloors = nil
 
 lib.pseudoMapIndex = nil
 
@@ -63,16 +67,26 @@ function lib.on_map_zone_changed()
   lib.check_map_state()
 end
 ]]--
-local function UpdateMapInfo()
+
+function LibMapData:SetPlayerLocation()
+  if SetMapToPlayerLocation() == SET_MAP_RESULT_FAILED then
+    LibMapData:dm("Warn", "SetMapToPlayerLocation Failed")
+  end
+  -- SET_MAP_RESULT_CURRENT_MAP_UNCHANGED
+end
+
+function LibMapData:UpdateMapInfo()
   local zoneIndex = GetCurrentMapZoneIndex()
   local mapIndex = GetCurrentMapIndex()
   local mapId = GetCurrentMapId()
   local zoneId = GetZoneId(zoneIndex)
+  local currentFloor, numFloors = GetMapFloorInfo()
 
-  lib.zoneIndex = GetCurrentMapZoneIndex()
-  lib.mapIndex = GetCurrentMapIndex()
-  lib.mapId = GetCurrentMapId()
-  lib.zoneId = GetZoneId(zoneIndex)
+  lib.zoneIndex = zoneIndex
+  lib.mapIndex = mapIndex
+  lib.mapId = mapId
+  lib.zoneId = zoneId
+  if numFloors > 0 then lib.currentFloor = currentFloor else lib.currentFloor = nil end
 
   local mapTextureByMapId = GetMapTileTextureForMapId(mapId, 1)
   local mapTexture = string.lower(mapTextureByMapId)
@@ -98,12 +112,17 @@ local function UpdateMapInfo()
 end
 
 local function OnZoneChanged(eventCode, zoneName, subZoneName, newSubzone, zoneId, subZoneId)
-  UpdateMapInfo()
+  LibMapData:dm("Debug", "OnZoneChanged")
+  LibMapData:SetPlayerLocation()
+  LibMapData:UpdateMapInfo()
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_zone_changed", EVENT_ZONE_CHANGED, OnZoneChanged)
 
 local function OnPlayerActivated(eventCode, initial)
-  if not initial then UpdateMapInfo() end
+  if not initial then
+    LibMapData:SetPlayerLocation()
+    LibMapData:UpdateMapInfo()
+  end
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_activated", EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
 
@@ -113,10 +132,11 @@ EVENT_MANAGER:RegisterForEvent(libName .. "_activated", EVENT_PLAYER_ACTIVATED, 
 
 local function BuildMapNames()
   local maxMapId = nil
+  local mapName
   for i = 1, lib.MAX_NUM_MAPIDS do
-    local name, mapType, mapContentType, zoneIndex, description = GetMapInfoById(i)
-    if name ~= "" then
-      lib.mapNames[i] = name
+    mapName = GetMapNameById(i)
+    if mapName ~= "" then
+      lib.mapNames[i] = mapName
       if maxMapId == nil or maxMapId < i then maxMapId = i end
     end
   end
@@ -130,6 +150,7 @@ local function BuildMapNamesLookup()
     built_table[var2] = var1
   end
   lib.mapNamesLookup = built_table
+  lib.mapNames = { } -- clear because you can use the API GetMapNameById(mapId)
 end
 
 -----
@@ -159,12 +180,42 @@ local function BuildZoneNamesLookup()
     built_table[var2] = var1
   end
   lib.zoneNamesLookup = built_table
+  lib.zoneNames = { } -- clear because you can use the API GetZoneNameByIndex(zoneIndex)
+end
+
+-----
+--- Texture Names
+-----
+
+local function BuildMapTextureNames()
+  local textureName = nil
+  local mapTexture
+  for i = 1, lib.MAX_NUM_MAPIDS do
+    textureName = GetMapTileTextureForMapId(i)
+    if textureName ~= "" then
+      mapTexture = string.lower(textureName)
+      mapTexture = mapTexture:gsub("^.*/maps/", "")
+      mapTexture = mapTexture:gsub("%.dds$", "")
+      lib.textureNames[i] = mapTexture
+    end
+  end
+end
+
+local function BuildMapTextureNamesLookup()
+  local built_table = {}
+
+  for var1, var2 in pairs(lib.textureNames) do
+    if built_table[var2] == nil then built_table[var2] = {} end
+    built_table[var2] = var1
+  end
+  lib.textureNamesLookup = built_table
+  lib.textureNames = { } -- clear because you can use the API GetMapTileTextureForMapId(mapId, tileIndex)
 end
 
 local function GetPlayerPos()
-  -- Get location info and format coordinates
   LibMapData:dm("Debug", "-----")
   LibMapData:dm("Debug", "GetPlayerPos")
+  LibMapData:UpdateMapInfo()
 
   local x, y = GetMapPlayerPosition("player")
   local xpos, ypos = GPS:LocalToGlobal(x, y)
@@ -183,6 +234,10 @@ local function GetPlayerPos()
   LibMapData:dm("Debug", "isMainZone: " .. tostring(lib.isMainZone))
   LibMapData:dm("Debug", "isSubzone: " .. tostring(lib.isSubzone))
   LibMapData:dm("Debug", "isWorld: " .. tostring(lib.isWorld))
+  if lib.currentFloor then
+    local floorString = string.format("currentFloor: %d of %d", lib.currentFloor, lib.numFloors)
+    LibMapData:dm("Debug", floorString)
+  end
   LibMapData:dm("Debug", "X: " .. x)
   LibMapData:dm("Debug", "Y: " .. y)
   LibMapData:dm("Debug", "GPS X: " .. xpos)
@@ -212,24 +267,30 @@ local function OnAddOnLoaded(eventCode, addonName)
 
     SLASH_COMMANDS["/lmdgetpos"] = function() GetPlayerPos() end -- used
 
-    UpdateMapInfo()
+    SLASH_COMMANDS["/lmdupdate"] = function() LibMapData:UpdateMapInfo() end -- used
+
+    LibMapData:SetPlayerLocation()
+    LibMapData:UpdateMapInfo()
     BuildMapNames()
     BuildMapNamesLookup()
     BuildZoneNames()
     BuildZoneNamesLookup()
+    BuildMapTextureNames()
+    BuildMapTextureNamesLookup()
   end
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_onload", EVENT_ADD_ON_LOADED, OnAddOnLoaded)
 
 CALLBACK_MANAGER:RegisterCallback("OnWorldMapChanged", function()
-  UpdateMapInfo()
+  LibMapData:UpdateMapInfo()
 end)
 
 WORLD_MAP_SCENE:RegisterCallback("StateChange", function(oldState, newState)
   if newState == SCENE_SHOWING then
-    UpdateMapInfo()
+    LibMapData:UpdateMapInfo()
   elseif newState == SCENE_HIDDEN then
-    UpdateMapInfo()
+    LibMapData:SetPlayerLocation()
+    LibMapData:UpdateMapInfo()
   end
 end)
 

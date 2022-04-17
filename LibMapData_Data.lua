@@ -47,43 +47,77 @@ LIBMAPDATA_FARGRAVE_PSEUDOMAPINDEX = 44
 LIBMAPDATA_THE_DEADLANDS_PSEUDOMAPINDEX = 45
 
 lib.tamrielData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  [108] = {
+    ["mapTexture"] = "guildmaps/eyevea_base_0",
+    ["pseudoMapIndex"] = LIBMAPDATA_TAMRIEL_PSEUDOMAPINDEX,
+  },
 }
 
 lib.glenumbraData = {
-  [1] = {
-    ["Impresario"] = {
-      x = 0.3420265614,
-      y = 0.7411329746,
-    },
-    ["Chef_Donolon"] = {
-      x = 0.2082464247,
-      y = 0.7187666893,
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = {
+    [1] = {
+      ["Impresario"] = {
+        x = 0.3420265614,
+        y = 0.7411329746,
+      },
+      ["Chef_Donolon"] = {
+        x = 0.2082464247,
+        y = 0.7187666893,
+      },
     },
   },
 }
 
 lib.rivenspireData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.stormhavenData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.alikr_DesertData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.bangkoraiData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.grahtwoodData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.malabal_TorData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.shadowfenData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.deshaanData = {
+  ["subZones"] = { },
+  ["dungeons"] = { 118, 1152, 1153 },
+  ["events"] = { },
   [118] = {
     ["mapTexture"] = "deshaan/darkshadecaverns_base_0",
     ["pseudoMapIndex"] = LIBMAPDATA_DESHAAN_PSEUDOMAPINDEX,
@@ -109,53 +143,139 @@ lib.deshaanData = {
 }
 
 lib.stonefallsData = {
-  [7] = {
-    ["Impresario"] = {
-      x = 0.9201570153,
-      y = 0.4024004340,
-    },
-    ["Chef_Donolon"] = {
-      x = 0.9166180491,
-      y = 0.3022293746,
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = {
+    [7] = {
+      ["Impresario"] = {
+        x = 0.9201570153,
+        y = 0.4024004340,
+      },
+      ["Chef_Donolon"] = {
+        x = 0.9166180491,
+        y = 0.3022293746,
+      },
     },
   },
 }
 
 lib.the_RiftData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.eastmarchData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.cyrodiilData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.auridonData = {
-  [143] = {
-    ["Impresario"] = {
-      x = 0.6482877135,
-      y = 0.8675177097,
-    },
-    ["Chef_Donolon"] = {
-      x = 0.6562538146,
-      y = 0.9370744824,
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = {
+    [143] = {
+      ["Impresario"] = {
+        x = 0.6482877135,
+        y = 0.8675177097,
+      },
+      ["Chef_Donolon"] = {
+        x = 0.6562538146,
+        y = 0.9370744824,
+      },
     },
   },
 }
 
 lib.greenshadeData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.reapers_MarchData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.bal_FoyenData = {
+  ["subZones"] = { 56, },
+  ["dungeons"] = { 713, },
+  ["events"] = { },
+  [56] = {
+    ["mapTexture"] = "stonefalls/dhalmora_base_0",
+    ["pseudoMapIndex"] = LIBMAPDATA_BAL_FOYEN_PSEUDOMAPINDEX,
+    ["mapScale"] = {
+      zoom_factor = 0.2375039756,
+      x = 0.4718720018,
+      y = 0.4531199932,
+    },
+  },
+  [713] = {
+    ["mapTexture"] = "balfoyen/smugglertunnel_base_0",
+    ["pseudoMapIndex"] = LIBMAPDATA_BAL_FOYEN_PSEUDOMAPINDEX,
+    ["mapScale"] = {
+      zoom_factor = 0.2375039756,
+      x = 0.4718720018,
+      y = 0.4531199932,
+    },
+  },
 }
 
 lib.stros_MKaiData = {
+  ["subZones"] = { 530, },
+  ["dungeons"] = { 247, },
+  ["events"] = { },
+  [530] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_STROS_MKAI_PSEUDOMAPINDEX,
+    ["mapTexture"] = "glenumbra/strosmkai_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.4183864891,
+      x = 0.4483701884,
+      y = 0.2100436538,
+    },
+  },
+  [247] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_STROS_MKAI_PSEUDOMAPINDEX,
+    ["mapTexture"] = "glenumbra/bthzark_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.1503042280,
+      x = 0.1867931485,
+      y = 0.4390945136,
+    },
+  },
+  [295] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_STROS_MKAI_PSEUDOMAPINDEX,
+    ["mapTexture"] = "glenumbra/goblinminesstart_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.1095895171,
+      x = 0.6883449554,
+      y = -0.0239869542,
+    },
+  },
+  [296] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_STROS_MKAI_PSEUDOMAPINDEX,
+    ["mapTexture"] = "glenumbra/goblinminesend_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.1712402105,
+      x = 0.5171047449,
+      y = 0.0753274559,
+    },
+  },
 }
 
 lib.betnikhData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
   [649] = {
     ["pseudoMapIndex"] = LIBMAPDATA_BETNIKH_PSEUDOMAPINDEX,
     ["mapTexture"] = "glenumbra/stonetoothfortress_base_0",
@@ -168,33 +288,133 @@ lib.betnikhData = {
 }
 
 lib.khenarthis_RoostData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
+  [295] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_KHENARTHIS_ROOST_PSEUDOMAPINDEX,
+    ["mapTexture"] = "auridon/khenarthisroost_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.2719750106,
+      x = 0.3891499936,
+      y = 0.3125,
+    },
+  },
+  [605] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_KHENARTHIS_ROOST_PSEUDOMAPINDEX,
+    ["mapTexture"] = "auridon/khenarthisroost_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.0918000340,
+      x = 0.6913999915123,
+      y = 0.38135001063347,
+    },
+  },
+  [329] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_KHENARTHIS_ROOST_PSEUDOMAPINDEX,
+    ["mapTexture"] = "auridon/templeofthemourningspring_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.1640500426,
+      x = 0.7446249723,
+      y = 0.4790000021,
+    },
+  },
 }
 
 lib.bleakrock_IsleData = {
+  ["subZones"] = { 8, },
+  ["dungeons"] = { 87, 88, 726, },
+  ["events"] = { },
+  [8] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_BLEAKROCK_ISLE_PSEUDOMAPINDEX,
+    ["mapTexture"] = "bleakrock/bleakrockvillage_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.3027249574,
+      x = 0.2955639958,
+      y = 0.4459442198,
+    },
+  },
+  [87] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_BLEAKROCK_ISLE_PSEUDOMAPINDEX,
+    ["mapTexture"] = "stonefalls/orkeyshollow_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.2217997610,
+      x = 0.3898183405,
+      y = 0.0246092099,
+    },
+  },
+  [88] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_BLEAKROCK_ISLE_PSEUDOMAPINDEX,
+    ["mapTexture"] = "stonefalls/hozzinsfolley_base_0",
+    ["mapScale"] = {
+      zoom_factor = 1.0000000027649,
+      x = -0.00011784114758,
+      y = -0.00011784114758,
+    },
+  },
+  [726] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_BLEAKROCK_ISLE_PSEUDOMAPINDEX,
+    ["mapTexture"] = "bleakrock/skyshroudbarrow_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.0820236206,
+      x = 0.7207013368,
+      y = 0.3710604012,
+    },
+  },
 }
 
 lib.coldharbourData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.the_AurbisData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.craglornData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.imperial_CityData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.wrothgarData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.hews_BaneData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.gold_CoastData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.vvardenfellData = {
+  ["subZones"] = { },
+  ["dungeons"] = { 1162, 1310, },
+  ["events"] = {
+    [1060] = {
+      ["Impresario"] = {
+        x = 0.4671077430,
+        y = 0.8333740830,
+      },
+    },
+  },
   [1162] = {
     ["pseudoMapIndex"] = LIBMAPDATA_VVARDENFELL_PSEUDOMAPINDEX,
     ["mapTexture"] = "vvardenfell/nchuleft_base_0",
@@ -204,7 +424,7 @@ lib.vvardenfellData = {
       zoom_factor = 0.0031403303,
     },
   },
-  [30] = {
+  [1310] = {
     ["pseudoMapIndex"] = LIBMAPDATA_VVARDENFELL_PSEUDOMAPINDEX,
     ["mapTexture"] = "vvardenfell/nchuleftingth1_base_0",
     ["mapScale"] = {
@@ -213,81 +433,214 @@ lib.vvardenfellData = {
       y = 0.6520555615,
     },
   },
-  [1060] = {
-    ["Impresario"] = {
-      x = 0.4671077430,
-      y = 0.8333740830,
-    },
-  },
 }
 
 lib.clockwork_CityData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.summersetData = {
-  [1349] = {
-    ["Impresario"] = {
-      x = 0.2842602431,
-      y = 0.5381632447,
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = {
+    [1349] = {
+      ["Impresario"] = {
+        x = 0.2842602431,
+        y = 0.5381632447,
+      },
     },
   },
 }
 
 lib.artaeumData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
+  [1476] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_ARTAEUM_PSEUDOMAPINDEX,
+    ["mapTexture"] = "summerset/dreamingcave02_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.0348578095,
+      x = 0.6414873004,
+      y = 0.2571611404,
+    },
+  },
+  [1489] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_ARTAEUM_PSEUDOMAPINDEX,
+    ["mapTexture"] = "summerset/dreamingcave03_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.0216386914,
+      x = 0.6568168401,
+      y = 0.2631108462,
+    },
+  },
+  [1488] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_ARTAEUM_PSEUDOMAPINDEX,
+    ["mapTexture"] = "summerset/dreamingcave03_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.0216386914,
+      x = 0.6568168401,
+      y = 0.2631108462,
+    },
+  },
+  [1493] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_ARTAEUM_PSEUDOMAPINDEX,
+    ["mapTexture"] = "summerset/collegeofpsijicsruins_btm_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.0160962939,
+      x = 0.5573176145,
+      y = 0.4827489554,
+    },
+  },
+  [1503] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_ARTAEUM_PSEUDOMAPINDEX,
+    ["mapTexture"] = "summerset/collegeofpsijicsruins_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.0160962939,
+      x = 0.5573176145,
+      y = 0.4827489554,
+    },
+  },
+  [1475] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_ARTAEUM_PSEUDOMAPINDEX,
+    ["mapTexture"] = "summerset/traitorsvault04_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.0073818266,
+      x = 0.3961500227,
+      y = 0.4466728270,
+    },
+  },
 }
 
 lib.murkmireData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.norg_TzelData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.northern_ElsweyrData = {
-  [1555] = {
-    ["Impresario"] = {
-      x = 0.7474783062,
-      y = 0.3210040330,
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = {
+    [1555] = {
+      ["Impresario"] = {
+        x = 0.7474783062,
+        y = 0.3210040330,
+      },
     },
   },
 }
 
 lib.southern_ElsweyrData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.western_SkyrimData = {
-  [1719] = {
-    ["Impresario"] = {
-      x = 0.5106408596,
-      y = 0.4133806228,
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = {
+    [1719] = {
+      ["Impresario"] = {
+        x = 0.5106408596,
+        y = 0.4133806228,
+      },
     },
   },
 }
 
 lib.blackreach_Greymoor_CavernsData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.blackreachData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.blackreach_Arkthzand_CavernData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.the_ReachData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.blackwoodData = {
-  [1887] = {
-    ["Impresario"] = {
-      x = 0.2744835615,
-      y = 0.5430571436,
+  ["subZones"] = { 1940, },
+  ["dungeons"] = { 1939, 2031, 2032 },
+  ["events"] = {
+    [1887] = {
+      ["Impresario"] = {
+        x = 0.2744835615,
+        y = 0.5430571436,
+      },
+    },
+  },
+  [1940] = {
+    ["mapTexture"] = "blackwood/u30_leyawiincity_base_0",
+    ["pseudoMapIndex"] = LIBMAPDATA_BLACKWOOD_PSEUDOMAPINDEX,
+    ["mapScale"] = {
+      zoom_factor = 0.0998815596,
+      x = 0.1879221797,
+      y = 0.5008402467,
+    },
+  },
+  [1939] = {
+    ["mapTexture"] = "blackwood/arpenial_base_0",
+    ["pseudoMapIndex"] = LIBMAPDATA_BLACKWOOD_PSEUDOMAPINDEX,
+    ["mapScale"] = {
+      zoom_factor = 0.0123090744,
+      x = 0.3725301027,
+      y = 0.2471901476,
+    },
+  },
+  [2031] = {
+    ["mapTexture"] = "blackwood/arpeniah2_base_0",
+    ["pseudoMapIndex"] = LIBMAPDATA_BLACKWOOD_PSEUDOMAPINDEX,
+    ["mapScale"] = {
+      zoom_factor = 0.0123090744,
+      x = 0.3725301027,
+      y = 0.2471901476,
+    },
+  },
+  [2032] = {
+    ["mapTexture"] = "blackwood/arpenial3_base_0",
+    ["pseudoMapIndex"] = LIBMAPDATA_BLACKWOOD_PSEUDOMAPINDEX,
+    ["mapScale"] = {
+      zoom_factor = 0.0123090744,
+      x = 0.3725301027,
+      y = 0.2471901476,
     },
   },
 }
 
 lib.fargraveData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.the_DeadlandsData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
 }
 
 lib.mapIndexData = {
