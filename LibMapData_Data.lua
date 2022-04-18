@@ -47,7 +47,7 @@ LIBMAPDATA_FARGRAVE_PSEUDOMAPINDEX = 44
 LIBMAPDATA_THE_DEADLANDS_PSEUDOMAPINDEX = 45
 
 lib.tamrielData = {
-  ["subZones"] = { },
+  ["subZones"] = { 108, },
   ["dungeons"] = { },
   [108] = {
     ["mapTexture"] = "guildmaps/eyevea_base_0",
@@ -232,11 +232,11 @@ lib.bal_FoyenData = {
 
 lib.stros_MKaiData = {
   ["subZones"] = { 530, },
-  ["dungeons"] = { 247, },
+  ["dungeons"] = { 247, 295, 296, },
   ["events"] = { },
   [530] = {
     ["pseudoMapIndex"] = LIBMAPDATA_STROS_MKAI_PSEUDOMAPINDEX,
-    ["mapTexture"] = "glenumbra/strosmkai_base_0",
+    ["mapTexture"] = "glenumbra/porthunding_base_0",
     ["mapScale"] = {
       zoom_factor = 0.4183864891,
       x = 0.4483701884,
@@ -288,12 +288,12 @@ lib.betnikhData = {
 }
 
 lib.khenarthis_RoostData = {
-  ["subZones"] = { },
-  ["dungeons"] = { },
+  ["subZones"] = { 567, },
+  ["dungeons"] = { 605, 329, },
   ["events"] = { },
-  [295] = {
+  [567] = {
     ["pseudoMapIndex"] = LIBMAPDATA_KHENARTHIS_ROOST_PSEUDOMAPINDEX,
-    ["mapTexture"] = "auridon/khenarthisroost_base_0",
+    ["mapTexture"] = "auridon/mistral_base_0",
     ["mapScale"] = {
       zoom_factor = 0.2719750106,
       x = 0.3891499936,
@@ -302,7 +302,7 @@ lib.khenarthis_RoostData = {
   },
   [605] = {
     ["pseudoMapIndex"] = LIBMAPDATA_KHENARTHIS_ROOST_PSEUDOMAPINDEX,
-    ["mapTexture"] = "auridon/khenarthisroost_base_0",
+    ["mapTexture"] = "auridon/hazikslair_base_0",
     ["mapScale"] = {
       zoom_factor = 0.0918000340,
       x = 0.6913999915123,
@@ -456,8 +456,17 @@ lib.summersetData = {
 
 lib.artaeumData = {
   ["subZones"] = { },
-  ["dungeons"] = { },
+  ["dungeons"] = { 1475, 1476, 1488, 1489, 1490, 1493, 1503, },
   ["events"] = { },
+  [1475] = {
+    ["pseudoMapIndex"] = LIBMAPDATA_ARTAEUM_PSEUDOMAPINDEX,
+    ["mapTexture"] = "summerset/traitorsvault04_base_0",
+    ["mapScale"] = {
+      zoom_factor = 0.0073818266,
+      x = 0.3961500227,
+      y = 0.4466728270,
+    },
+  },
   [1476] = {
     ["pseudoMapIndex"] = LIBMAPDATA_ARTAEUM_PSEUDOMAPINDEX,
     ["mapTexture"] = "summerset/dreamingcave02_base_0",
@@ -465,15 +474,6 @@ lib.artaeumData = {
       zoom_factor = 0.0348578095,
       x = 0.6414873004,
       y = 0.2571611404,
-    },
-  },
-  [1489] = {
-    ["pseudoMapIndex"] = LIBMAPDATA_ARTAEUM_PSEUDOMAPINDEX,
-    ["mapTexture"] = "summerset/dreamingcave03_base_0",
-    ["mapScale"] = {
-      zoom_factor = 0.0216386914,
-      x = 0.6568168401,
-      y = 0.2631108462,
     },
   },
   [1488] = {
@@ -503,16 +503,9 @@ lib.artaeumData = {
       y = 0.4827489554,
     },
   },
-  [1475] = {
-    ["pseudoMapIndex"] = LIBMAPDATA_ARTAEUM_PSEUDOMAPINDEX,
-    ["mapTexture"] = "summerset/traitorsvault04_base_0",
-    ["mapScale"] = {
-      zoom_factor = 0.0073818266,
-      x = 0.3961500227,
-      y = 0.4466728270,
-    },
-  },
 }
+lib.artaeumData[1489] = lib.artaeumData[1488] -- dreamingcave03_base_0
+lib.artaeumData[1490] = lib.artaeumData[1488] -- dreamingcave03_base_0
 
 lib.murkmireData = {
   ["subZones"] = { },
@@ -583,7 +576,7 @@ lib.the_ReachData = {
 }
 
 lib.blackwoodData = {
-  ["subZones"] = { 1940, },
+  ["subZones"] = { 1940, 1972, 2051, 2052 },
   ["dungeons"] = { 1939, 2031, 2032 },
   ["events"] = {
     [1887] = {
@@ -630,6 +623,9 @@ lib.blackwoodData = {
     },
   },
 }
+lib.artaeumData[1972] = lib.artaeumData[1940] -- u30_leyawiincity_base_0
+lib.artaeumData[2051] = lib.artaeumData[1940] -- u30_leyawiincity_base_0
+lib.artaeumData[2052] = lib.artaeumData[1940] -- u30_leyawiincity_base_0
 
 lib.fargraveData = {
   ["subZones"] = { },

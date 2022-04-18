@@ -1,6 +1,8 @@
 local libName, libVersion = "LibMapData", 100
 local lib = {}
+local internal = {}
 _G["LibMapData"] = lib
+_G["LibMapData_Internal"] = internal
 
 local GPS = LibGPS3
 
@@ -33,49 +35,48 @@ lib.MAX_NUM_MAPIDS = 2192
 lib.MAX_NUM_ZONEINDEXES = 881
 lib.MAX_NUM_ZONEIDS = 1345
 -- max zoneId 1345 using valid zoneIndex
---[[
-function lib.on_map_zone_changed()
-  internal.dm("Debug", "[5] on_map_zone_changed")
 
-  internal.dm("Debug", "[5] Updating last_mapid and current_mapid")
-  lib.last_mapid = lib.current_mapid
-  lib.last_zone = lib.current_zone
-  lib.current_mapid = GetCurrentMapId()
-  lib.current_zone = LMP:GetZoneAndSubzone(true, false, true)
-
-  if not lib.last_mapid then
-    internal.dm("Debug", "[5] LMP did not set the last_mapid properly")
-  end
-  if not lib.last_zone then
-    internal.dm("Debug", "[5] LMP did not set the last_zone properly")
-  end
-  if not lib.current_mapid then
-    internal.dm("Debug", "[5] LMP did not set the current_mapid properly")
-  end
-  if not lib.current_zone then
-    internal.dm("Debug", "[5] LMP did not set the current_zone properly")
-  end
-
-  local temp = string.format("[5] Last Mapid: %s", lib.last_mapid) or "[5] NA"
-  internal.dm("Debug", temp)
-  local temp = string.format("[5] Last Zone: %s", lib.last_zone) or "[5] NA"
-  internal.dm("Debug", temp)
-  local temp = string.format("[5] Current Mapid: %s", lib.current_mapid) or "[5] NA"
-  internal.dm("Debug", temp)
-  local temp = string.format("[5] Current Zone: %s", lib.current_zone) or "[5] NA"
-  internal.dm("Debug", temp)
-  lib.check_map_state()
+-----
+--- API functions
+-----
+-- /script d(LibMapData:GetMapIdByTileTexture("blackwood/arpenial3_base_0"))
+-- /script d(GetMapTileTextureForMapId(1490, 1))
+function lib:GetMapIdByTileTexture(tileTexture)
+  if lib.textureNamesLookup[tileTexture] then return lib.textureNamesLookup[tileTexture] end
 end
-]]--
 
-function LibMapData:SetPlayerLocation()
+function lib:GetMapIdByMapName(mapName)
+  if lib.mapNamesLookup[mapName] then return lib.mapNamesLookup[mapName] end
+end
+
+function lib:ReturnSingleIndex(indexTable)
+  if not indexTable then
+    internal:dm("Warn", "ReturnSingleIndex Failed, no indexes found or table is nil")
+    return
+  end
+  if NonContiguousCount(indexTable) == 1 then return indexTable[1]
+  elseif NonContiguousCount(indexTable) > 1 then
+    internal:dm("Warn", "ReturnSingleIndex Failed, multiple indexes found")
+    return
+  end
+end
+
+-----
+--- Utility functions
+-----
+
+function internal:SetPlayerLocation()
+  local originalMap = GetMapTileTexture()
   if SetMapToPlayerLocation() == SET_MAP_RESULT_FAILED then
-    LibMapData:dm("Warn", "SetMapToPlayerLocation Failed")
+    internal:dm("Warn", "SetMapToPlayerLocation Failed")
+  end
+  if GetMapTileTexture() ~= originalMap then
+    CALLBACK_MANAGER:FireCallbacks("OnWorldMapChanged")
   end
   -- SET_MAP_RESULT_CURRENT_MAP_UNCHANGED
 end
 
-function LibMapData:UpdateMapInfo()
+function internal:UpdateMapInfo()
   local zoneIndex = GetCurrentMapZoneIndex()
   local mapIndex = GetCurrentMapIndex()
   local mapId = GetCurrentMapId()
@@ -112,20 +113,50 @@ function LibMapData:UpdateMapInfo()
 end
 
 local function OnZoneChanged(eventCode, zoneName, subZoneName, newSubzone, zoneId, subZoneId)
-  LibMapData:dm("Debug", "OnZoneChanged")
-  LibMapData:SetPlayerLocation()
-  LibMapData:UpdateMapInfo()
+  internal:dm("Debug", "OnZoneChanged")
+  internal:SetPlayerLocation()
+  internal:UpdateMapInfo()
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_zone_changed", EVENT_ZONE_CHANGED, OnZoneChanged)
 
 local function OnPlayerActivated(eventCode, initial)
   if not initial then
-    LibMapData:SetPlayerLocation()
-    LibMapData:UpdateMapInfo()
+    internal:SetPlayerLocation()
+    internal:UpdateMapInfo()
   end
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_activated", EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
 
+-----
+--- Check for multiple MapNames with different IDs
+-----
+
+function internal:ContainsIndex(indexTable, indexToFind)
+  if not indexToFind then return true end
+  local foundId = false
+  for mapName, indexes in pairs(indexTable) do
+    -- internal:dm("Debug", mapName)
+    for _, index in pairs(indexes) do
+      -- internal:dm("Debug", index)
+      if index == indexToFind then
+        foundId = true
+      end
+    end
+  end
+  return foundId
+end
+
+function internal:TableContainsIndex(indexTable, indexToFind)
+  if not indexToFind then return true end
+  local foundId = false
+  for _, index in pairs(indexTable) do
+    -- internal:dm("Debug", index)
+    if index == indexToFind then
+      foundId = true
+    end
+  end
+  return foundId
+end
 -----
 --- MapNames
 -----
@@ -142,12 +173,19 @@ local function BuildMapNames()
   end
 end
 
+--[[ this lookup builds a table for each map name containing all the
+different mapIds of the same map name. ]]--
 local function BuildMapNamesLookup()
   local built_table = {}
 
   for var1, var2 in pairs(lib.mapNames) do
     if built_table[var2] == nil then built_table[var2] = {} end
-    built_table[var2] = var1
+    if internal:ContainsIndex(built_table, var1) then
+      -- internal:dm("Debug", "Var 1 is in ids")
+    else
+      -- internal:dm("Debug", "Var 1 is not in ids")
+      table.insert(built_table[var2], var1)
+    end
   end
   lib.mapNamesLookup = built_table
   lib.mapNames = { } -- clear because you can use the API GetMapNameById(mapId)
@@ -206,45 +244,51 @@ local function BuildMapTextureNamesLookup()
 
   for var1, var2 in pairs(lib.textureNames) do
     if built_table[var2] == nil then built_table[var2] = {} end
-    built_table[var2] = var1
+    if internal:ContainsIndex(built_table, var1) then
+      -- internal:dm("Debug", "Var 1 is in ids")
+    else
+      -- internal:dm("Debug", "Var 1 is not in ids")
+      table.insert(built_table[var2], var1)
+    end
   end
   lib.textureNamesLookup = built_table
   lib.textureNames = { } -- clear because you can use the API GetMapTileTextureForMapId(mapId, tileIndex)
 end
 
 local function GetPlayerPos()
-  LibMapData:dm("Debug", "-----")
-  LibMapData:dm("Debug", "GetPlayerPos")
-  LibMapData:UpdateMapInfo()
+  internal:dm("Debug", "-----")
+  internal:dm("Debug", "GetPlayerPos")
+  internal:SetPlayerLocation()
+  internal:UpdateMapInfo()
 
   local x, y = GetMapPlayerPosition("player")
   local xpos, ypos = GPS:LocalToGlobal(x, y)
   local zone_id, worldX, worldY, worldZ = GetUnitWorldPosition("player")
 
-  LibMapData:dm("Debug", lib.mapTexture)
-  if lib.zoneName then LibMapData:dm("Debug", "zoneName: " .. lib.zoneName) end
-  if lib.mapName then LibMapData:dm("Debug", "mapName: " .. lib.mapName) end
-  if subzoneName then LibMapData:dm("Debug", "***subzoneName: " .. lib.subzoneName) end
+  internal:dm("Debug", lib.mapTexture)
+  if lib.zoneName then internal:dm("Debug", "zoneName: " .. lib.zoneName) end
+  if lib.mapName then internal:dm("Debug", "mapName: " .. lib.mapName) end
+  if subzoneName then internal:dm("Debug", "***subzoneName: " .. lib.subzoneName) end
 
-  if lib.zoneId then LibMapData:dm("Debug", "ZoneId: " .. lib.zoneId) end
-  if lib.mapIndex then LibMapData:dm("Debug", "MapIndex: " .. lib.mapIndex) end
-  if lib.mapId then LibMapData:dm("Debug", "mapId: " .. lib.mapId) end
-  if lib.zoneIndex then LibMapData:dm("Debug", "zoneIndex: " .. lib.zoneIndex) end
-  LibMapData:dm("Debug", "isDungeon: " .. tostring(lib.isDungeon))
-  LibMapData:dm("Debug", "isMainZone: " .. tostring(lib.isMainZone))
-  LibMapData:dm("Debug", "isSubzone: " .. tostring(lib.isSubzone))
-  LibMapData:dm("Debug", "isWorld: " .. tostring(lib.isWorld))
+  if lib.zoneId then internal:dm("Debug", "ZoneId: " .. lib.zoneId) end
+  if lib.mapIndex then internal:dm("Debug", "MapIndex: " .. lib.mapIndex) end
+  if lib.mapId then internal:dm("Debug", "mapId: " .. lib.mapId) end
+  if lib.zoneIndex then internal:dm("Debug", "zoneIndex: " .. lib.zoneIndex) end
+  internal:dm("Debug", "isDungeon: " .. tostring(lib.isDungeon))
+  internal:dm("Debug", "isMainZone: " .. tostring(lib.isMainZone))
+  internal:dm("Debug", "isSubzone: " .. tostring(lib.isSubzone))
+  internal:dm("Debug", "isWorld: " .. tostring(lib.isWorld))
   if lib.currentFloor then
     local floorString = string.format("currentFloor: %d of %d", lib.currentFloor, lib.numFloors)
-    LibMapData:dm("Debug", floorString)
+    internal:dm("Debug", floorString)
   end
-  LibMapData:dm("Debug", "X: " .. x)
-  LibMapData:dm("Debug", "Y: " .. y)
-  LibMapData:dm("Debug", "GPS X: " .. xpos)
-  LibMapData:dm("Debug", "GPS Y: " .. ypos)
-  LibMapData:dm("Debug", "worldX: " .. worldX)
-  LibMapData:dm("Debug", "worldY: " .. worldY)
-  LibMapData:dm("Debug", "worldZ: " .. worldZ)
+  internal:dm("Debug", "X: " .. x)
+  internal:dm("Debug", "Y: " .. y)
+  internal:dm("Debug", "GPS X: " .. xpos)
+  internal:dm("Debug", "GPS Y: " .. ypos)
+  internal:dm("Debug", "worldX: " .. worldX)
+  internal:dm("Debug", "worldY: " .. worldY)
+  internal:dm("Debug", "worldZ: " .. worldZ)
 
   --local distance = zo_round(GPS:GetLocalDistanceInMeters(0.62716490030289, 0.56329780817032, 0.62702748199203, 0.61508411169052))
   --d(distance)
@@ -267,10 +311,10 @@ local function OnAddOnLoaded(eventCode, addonName)
 
     SLASH_COMMANDS["/lmdgetpos"] = function() GetPlayerPos() end -- used
 
-    SLASH_COMMANDS["/lmdupdate"] = function() LibMapData:UpdateMapInfo() end -- used
+    SLASH_COMMANDS["/lmdupdate"] = function() internal:UpdateMapInfo() end -- used
 
-    LibMapData:SetPlayerLocation()
-    LibMapData:UpdateMapInfo()
+    internal:SetPlayerLocation()
+    internal:UpdateMapInfo()
     BuildMapNames()
     BuildMapNamesLookup()
     BuildZoneNames()
@@ -282,21 +326,21 @@ end
 EVENT_MANAGER:RegisterForEvent(libName .. "_onload", EVENT_ADD_ON_LOADED, OnAddOnLoaded)
 
 CALLBACK_MANAGER:RegisterCallback("OnWorldMapChanged", function()
-  LibMapData:UpdateMapInfo()
+  internal:UpdateMapInfo()
 end)
 
 WORLD_MAP_SCENE:RegisterCallback("StateChange", function(oldState, newState)
   if newState == SCENE_SHOWING then
-    LibMapData:UpdateMapInfo()
+    internal:UpdateMapInfo()
   elseif newState == SCENE_HIDDEN then
-    LibMapData:SetPlayerLocation()
-    LibMapData:UpdateMapInfo()
+    internal:SetPlayerLocation()
+    internal:UpdateMapInfo()
   end
 end)
 
 if LibDebugLogger then
   local logger = LibDebugLogger.Create(libName)
-  LibMapData.logger = logger
+  lib.logger = logger
 end
 
 local function create_log(log_type, log_content)
@@ -306,16 +350,16 @@ local function create_log(log_type, log_content)
   end
   if not LibDebugLogger then return end
   if log_type == "Debug" then
-    LibMapData.logger:Debug(log_content)
+    lib.logger:Debug(log_content)
   end
   if log_type == "Info" then
-    LibMapData.logger:Info(log_content)
+    lib.logger:Info(log_content)
   end
   if log_type == "Verbose" then
-    LibMapData.logger:Verbose(log_content)
+    lib.logger:Verbose(log_content)
   end
   if log_type == "Warn" then
-    LibMapData.logger:Warn(log_content)
+    lib.logger:Warn(log_content)
   end
 end
 
@@ -346,7 +390,7 @@ local function emit_table(log_type, t, indent, table_history)
   end
 end
 
-function LibMapData:dm(log_type, ...)
+function internal:dm(log_type, ...)
   for i = 1, select("#", ...) do
     local value = select(i, ...)
     if (type(value) == "table") then
