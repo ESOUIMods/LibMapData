@@ -3,7 +3,7 @@
 ## Version: 1.00
 ## AddOnVersion: 100
 ## IsLibrary: true
-## APIVersion: 101032 101033
+## APIVersion: 101033 101034
 ## SavedVariables: LibMapData_Data
 ## OptionalDependsOn: LibDebugLogger>=220 DebugLogViewer>=558
 
