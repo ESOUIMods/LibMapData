@@ -4,7 +4,7 @@
 ## AddOnVersion: 100
 ## IsLibrary: true
 ## APIVersion: 101033 101034
-## SavedVariables: LibMapData_Data
+## SavedVariables: LibMapData_SavedVariables
 ## OptionalDependsOn: LibDebugLogger>=220 DebugLogViewer>=558
 
 ## This Add-on is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates.

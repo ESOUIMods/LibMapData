@@ -30,17 +30,18 @@ lib.numFloors = nil
 lib.pseudoMapIndex = nil
 
 lib.MAPINDEX_MIN = 1
-lib.MAPINDEX_MAX = 45
-lib.MAX_NUM_MAPIDS = 2192
-lib.MAX_NUM_ZONEINDEXES = 881
-lib.MAX_NUM_ZONEIDS = 1345
+lib.MAPINDEX_MAX = 46 -- 45
+lib.MAX_NUM_MAPIDS = 2223 -- 2192
+lib.MAX_NUM_ZONEINDEXES = 907 -- 881
+lib.MAX_NUM_ZONEIDS = 1364 -- 1345
 -- max zoneId 1345 using valid zoneIndex
 
 -----
 --- API functions
 -----
--- /script d(LibMapData:GetMapIdByTileTexture("blackwood/arpenial3_base_0"))
+-- /script d(LibMapData:GetMapIdByTileTexture("glenumbra/ancientcarzogsdemise_base_0"))
 -- /script d(GetMapTileTextureForMapId(1490, 1))
+-- /script d(LibMapData:GetMapIdByMapName("Carzog's Demise"))
 function lib:GetMapIdByTileTexture(tileTexture)
   if lib.textureNamesLookup[tileTexture] then return lib.textureNamesLookup[tileTexture] end
 end
@@ -61,18 +62,40 @@ function lib:ReturnSingleIndex(indexTable)
   end
 end
 
+function lib:GetZoneMapIdFromMapId(mapId)
+  local _, _, _, zoneIndex, _ = GetMapInfoById(mapId)
+  local zoneId = GetZoneId(zoneIndex)
+  local zoneMapZoneId = GetParentZoneId(zoneId)
+  local zoneMapMapId = GetMapIdByZoneId(zoneMapZoneId)
+  return zoneMapMapId
+end
+
+function lib:GetZoneMapIdFromZoneId(zoneId)
+  local zoneMapZoneId = GetParentZoneId(zoneId)
+  local zoneMapMapId = GetMapIdByZoneId(zoneMapZoneId)
+  return zoneMapMapId
+end
+-- /script d(LibMapData:GetZoneMapIdFromMapId(mapId))
+-- /script d(GetMapNameById(mapId))
 -----
 --- Utility functions
 -----
 
-function internal:SetPlayerLocation()
+--[[Returns true when the map information changed.
+
+Returns false when map information is unchanged to
+prevent unnecessary refreshing of information.
+]]--
+function internal:SetPlayerLocation(force)
   local originalMap = GetMapTileTexture()
   if SetMapToPlayerLocation() == SET_MAP_RESULT_FAILED then
     internal:dm("Warn", "SetMapToPlayerLocation Failed")
   end
-  if GetMapTileTexture() ~= originalMap then
+  if GetMapTileTexture() ~= originalMap or force then
     CALLBACK_MANAGER:FireCallbacks("OnWorldMapChanged")
+    return true
   end
+  return false
   -- SET_MAP_RESULT_CURRENT_MAP_UNCHANGED
 end
 
@@ -114,15 +137,17 @@ end
 
 local function OnZoneChanged(eventCode, zoneName, subZoneName, newSubzone, zoneId, subZoneId)
   internal:dm("Debug", "OnZoneChanged")
-  internal:SetPlayerLocation()
-  internal:UpdateMapInfo()
+  if internal:SetPlayerLocation() then
+    internal:UpdateMapInfo()
+  end
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_zone_changed", EVENT_ZONE_CHANGED, OnZoneChanged)
 
 local function OnPlayerActivated(eventCode, initial)
   if not initial then
-    internal:SetPlayerLocation()
-    internal:UpdateMapInfo()
+    if internal:SetPlayerLocation() then
+      internal:UpdateMapInfo()
+    end
   end
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_activated", EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
@@ -162,6 +187,7 @@ end
 -----
 
 local function BuildMapNames()
+  --internal:dm("Debug", "BuildMapNames")
   local maxMapId = nil
   local mapName
   for i = 1, lib.MAX_NUM_MAPIDS do
@@ -171,6 +197,7 @@ local function BuildMapNames()
       if maxMapId == nil or maxMapId < i then maxMapId = i end
     end
   end
+  --internal:dm("Debug", maxMapId)
 end
 
 --[[ this lookup builds a table for each map name containing all the
@@ -196,6 +223,7 @@ end
 -----
 
 local function BuildZoneNames()
+  --internal:dm("Debug", "BuildZoneNames")
   local maxZoneIndex = nil
   local maxZoneId = nil
   local zoneId = nil
@@ -208,6 +236,8 @@ local function BuildZoneNames()
       if maxZoneId == nil or maxZoneId < zoneId then maxZoneId = zoneId end
     end
   end
+  --internal:dm("Debug", maxZoneIndex)
+  --internal:dm("Debug", maxZoneId)
 end
 
 local function BuildZoneNamesLookup()
@@ -255,10 +285,49 @@ local function BuildMapTextureNamesLookup()
   lib.textureNames = { } -- clear because you can use the API GetMapTileTextureForMapId(mapId, tileIndex)
 end
 
+local function BuildMapIndexTable()
+  internal:dm("Debug", "BuildMapIndexTable")
+
+  local built_table = {}
+  local maxMapIndex = nil
+  for i = 1, 30000 do
+    local name, mapType, mapContentType, zoneIndex, description = GetMapInfoByIndex(i)
+    if name ~= "" then
+      local mapId = GetMapIdByIndex(i)
+      local theInfo = {
+        ["mapTexture"] = GetMapTileTextureForMapId(mapId, 1),
+        ["mapIndex"] = i,
+        ["mapId"] = mapId,
+        ["zoneIndex"] = zoneIndex,
+        ["zoneName"] = GetZoneNameByIndex(zoneIndex),
+        ["zoneId"] = GetZoneId(zoneIndex),
+      }
+      built_table[i] = theInfo
+
+      if maxMapIndex == nil or maxMapIndex < zoneId then maxMapIndex = i end
+    end
+  end
+  internal:dm("Debug", maxMapIndex)
+  LibMapData_SavedVariables = {}
+  LibMapData_SavedVariables.mapIndexTable = {}
+  LibMapData_SavedVariables.mapIndexTable = built_table
+end
+
+local function BuildZoneIdTable()
+  internal:dm("Debug", "BuildZoneIdTable")
+  local maxZoneId = nil
+  for i = 1, 30000 do
+    local zoneName = GetZoneNameById(i)
+    if zoneName ~= "" then
+      if maxZoneId == nil or maxZoneId < zoneId then maxZoneId = i end
+    end
+  end
+  internal:dm("Debug", maxZoneId)
+end
+
 local function GetPlayerPos()
   internal:dm("Debug", "-----")
   internal:dm("Debug", "GetPlayerPos")
-  internal:SetPlayerLocation()
   internal:UpdateMapInfo()
 
   local x, y = GetMapPlayerPosition("player")
@@ -311,10 +380,12 @@ local function OnAddOnLoaded(eventCode, addonName)
 
     SLASH_COMMANDS["/lmdgetpos"] = function() GetPlayerPos() end -- used
 
-    SLASH_COMMANDS["/lmdupdate"] = function() internal:UpdateMapInfo() end -- used
-
     internal:SetPlayerLocation()
     internal:UpdateMapInfo()
+
+    --BuildMapIndexTable()
+    --BuildZoneIdTable()
+
     BuildMapNames()
     BuildMapNamesLookup()
     BuildZoneNames()

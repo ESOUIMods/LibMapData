@@ -45,6 +45,7 @@ LIBMAPDATA_THE_REACH_PSEUDOMAPINDEX = 42
 LIBMAPDATA_BLACKWOOD_PSEUDOMAPINDEX = 43
 LIBMAPDATA_FARGRAVE_PSEUDOMAPINDEX = 44
 LIBMAPDATA_THE_DEADLANDS_PSEUDOMAPINDEX = 45
+LIBMAPDATA_HIGH_ISLE_PSEUDOMAPINDEX = 46
 
 lib.tamrielData = {
   ["subZones"] = { 108, },
@@ -639,6 +640,12 @@ lib.the_DeadlandsData = {
   ["events"] = { },
 }
 
+lib.high_IsleData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
+}
+
 lib.mapIndexData = {
   [1] = {
     ["mapTexture"] = "",
@@ -1045,5 +1052,14 @@ lib.mapIndexData = {
     ["zoneName"] = "The Deadlands",
     ["zoneId"] = 1286,
     ["mapsData"] = lib.the_DeadlandsData,
+  },
+  [46] = {
+    ["mapTexture"] = "systres/u34_systreszone_base_0",
+    ["mapIndex"] = 46,
+    ["mapId"] = 2114,
+    ["zoneIndex"] = 883,
+    ["zoneName"] = "High Isle",
+    ["zoneId"] = 1318,
+    ["mapsData"] = lib.high_IsleData,
   },
 }
