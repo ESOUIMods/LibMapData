@@ -26,6 +26,7 @@ lib.mapName = nil
 lib.subzoneName = nil
 lib.currentFloor = nil
 lib.numFloors = nil
+lib.reticleInteractionName = nil
 
 lib.pseudoMapIndex = nil
 
@@ -137,20 +138,69 @@ end
 
 local function OnZoneChanged(eventCode, zoneName, subZoneName, newSubzone, zoneId, subZoneId)
   internal:dm("Debug", "OnZoneChanged")
+  lib.reticleInteractionName = nil
   if internal:SetPlayerLocation() then
     internal:UpdateMapInfo()
   end
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_zone_changed", EVENT_ZONE_CHANGED, OnZoneChanged)
 
+local climbLocalization = {
+  ["en"] = "Climb",
+}
+local wordClimb = climbLocalization[GetCVar("Language.2")]
+local approved_interaction_types = {
+  [GetString(SI_GAMECAMERAACTIONTYPE1)] = true, -- Search
+  [GetString(SI_GAMECAMERAACTIONTYPE5)] = true,  -- Use
+  [GetString(SI_GAMECAMERAACTIONTYPE13)] = true,  -- Open
+  [GetString(SI_GAMECAMERAACTIONTYPE6)] = true, -- Read
+  [GetString(SI_GAMECAMERAACTIONTYPE10)] = true, -- Inspect
+  [GetString(SI_GAMECAMERAACTIONTYPE15)] = true, -- Examine
+  [wordClimb] = true, -- Climb
+}
+
+ZO_PreHook(ZO_Reticle, "TryHandlingInteraction", function(interactionPossible, currentFrameTimeSeconds)
+  if IsGameCameraActive() and not IsGameCameraUIModeActive() then
+    local action, name, interactBlocked, isOwned, additionalInfo, contextualInfo, contextualLink, isCriminalInteract = GetGameCameraInteractableActionInfo()
+    local validInteraction = approved_interaction_types[action]
+    if name and validInteraction and not interactBlocked then
+      lib.reticleInteractionName = name
+    else
+      lib.reticleInteractionName = nil
+    end
+  end
+end)
+
+local function OnWorldPositionChanged(eventCode, clientInteractResult, interactTargetName)
+  lib.reticleInteractionName = nil
+    if internal:SetPlayerLocation() then
+      internal:UpdateMapInfo()
+    end
+end
+EVENT_MANAGER:RegisterForEvent(libName .. "_OnWorldPositionChanged", EVENT_LINKED_WORLD_POSITION_CHANGED, OnWorldPositionChanged)
+
 local function OnPlayerActivated(eventCode, initial)
   if not initial then
+    lib.reticleInteractionName = nil
     if internal:SetPlayerLocation() then
       internal:UpdateMapInfo()
     end
   end
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_activated", EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
+
+CALLBACK_MANAGER:RegisterCallback("OnWorldMapChanged", function()
+  internal:UpdateMapInfo()
+end)
+
+WORLD_MAP_SCENE:RegisterCallback("StateChange", function(oldState, newState)
+  if newState == SCENE_SHOWING then
+    internal:UpdateMapInfo()
+  elseif newState == SCENE_HIDDEN then
+    internal:SetPlayerLocation()
+    internal:UpdateMapInfo()
+  end
+end)
 
 -----
 --- Check for multiple MapNames with different IDs
@@ -395,19 +445,6 @@ local function OnAddOnLoaded(eventCode, addonName)
   end
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_onload", EVENT_ADD_ON_LOADED, OnAddOnLoaded)
-
-CALLBACK_MANAGER:RegisterCallback("OnWorldMapChanged", function()
-  internal:UpdateMapInfo()
-end)
-
-WORLD_MAP_SCENE:RegisterCallback("StateChange", function(oldState, newState)
-  if newState == SCENE_SHOWING then
-    internal:UpdateMapInfo()
-  elseif newState == SCENE_HIDDEN then
-    internal:SetPlayerLocation()
-    internal:UpdateMapInfo()
-  end
-end)
 
 if LibDebugLogger then
   local logger = LibDebugLogger.Create(libName)
