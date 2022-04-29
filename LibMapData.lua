@@ -1,10 +1,32 @@
-local libName, libVersion = "LibMapData", 100
+local libName, libVersion = "LibMapData", 102
 local lib = {}
 local internal = {}
 _G["LibMapData"] = lib
 _G["LibMapData_Internal"] = internal
-
 local GPS = LibGPS3
+
+lib.callbackType = {}
+lib.callbackType.EVENT_ZONE_CHANGED = "LibMapDataEventZoneChanged"
+lib.callbackType.EVENT_LINKED_WORLD_POSITION_CHANGED = "LibMapDataEventLinkedWorldPositionChanged"
+lib.callbackType.EVENT_PLAYER_ACTIVATED = "LibMapDataEventPlayerActivated"
+lib.callbackType.OnWorldMapChanged = "LibMapDataOnWorldMapChanged"
+lib.callbackType.WorldMapSceneStateChange = "LibMapDataWorldMapSceneStateChange"
+
+local callbackObject = ZO_CallbackObject:New()
+lib.callbackObject = {}
+lib.callbackObject = callbackObject
+
+function lib:RegisterCallback(...)
+    return lib.callbackObject:RegisterCallback(...)
+end
+
+function lib:UnregisterCallback(...)
+    return lib.callbackObject:UnregisterCallback(...)
+end
+
+function lib:FireCallbacks(...)
+    return callbackObject:FireCallbacks(...)
+end
 
 lib.mapNames = {}
 lib.mapNamesLookup = {}
@@ -27,7 +49,8 @@ lib.subzoneName = nil
 lib.currentFloor = nil
 lib.numFloors = nil
 lib.reticleInteractionName = nil
-
+lib.lastInteractionTarget = nil
+lib.questShared = false -- for LibQuestData
 lib.pseudoMapIndex = nil
 
 lib.MAPINDEX_MIN = 1
@@ -76,6 +99,14 @@ function lib:GetZoneMapIdFromZoneId(zoneId)
   local zoneMapMapId = GetMapIdByZoneId(zoneMapZoneId)
   return zoneMapMapId
 end
+
+function lib:GetMapTileTextureFromMapId(mapId)
+  local mapTextureByMapId = GetMapTileTextureForMapId(mapId, 1)
+  local mapTexture = string.lower(mapTextureByMapId)
+  mapTexture = mapTexture:gsub("^.*/maps/", "")
+  mapTexture = mapTexture:gsub("%.dds$", "")
+  lib.mapTexture = mapTexture
+end
 -- /script d(LibMapData:GetZoneMapIdFromMapId(mapId))
 -- /script d(GetMapNameById(mapId))
 -----
@@ -87,6 +118,7 @@ end
 Returns false when map information is unchanged to
 prevent unnecessary refreshing of information.
 ]]--
+-- /script LibMapData_Internal:SetPlayerLocation()
 function internal:SetPlayerLocation(force)
   local originalMap = GetMapTileTexture()
   if SetMapToPlayerLocation() == SET_MAP_RESULT_FAILED then
@@ -99,7 +131,7 @@ function internal:SetPlayerLocation(force)
   return false
   -- SET_MAP_RESULT_CURRENT_MAP_UNCHANGED
 end
-
+-- /script LibMapData_Internal:UpdateMapInfo()
 function internal:UpdateMapInfo()
   local zoneIndex = GetCurrentMapZoneIndex()
   local mapIndex = GetCurrentMapIndex()
@@ -111,13 +143,11 @@ function internal:UpdateMapInfo()
   lib.mapIndex = mapIndex
   lib.mapId = mapId
   lib.zoneId = zoneId
-  if numFloors > 0 then lib.currentFloor = currentFloor else lib.currentFloor = nil end
+  lib.currentFloor = currentFloor
+  lib.numFloors = numFloors
 
-  local mapTextureByMapId = GetMapTileTextureForMapId(mapId, 1)
-  local mapTexture = string.lower(mapTextureByMapId)
-  mapTexture = mapTexture:gsub("^.*/maps/", "")
-  mapTexture = mapTexture:gsub("%.dds$", "")
-  lib.mapTexture = mapTexture
+  -- no lib.x = because this sets the global variable lib.mapTexture
+  lib:GetMapTileTextureFromMapId(mapId)
 
   local name, mapType, mapContentType, zoneIndex, description = GetMapInfoById(mapId)
   lib.isMainZone = mapType == MAPTYPE_ZONE
@@ -139,8 +169,10 @@ end
 local function OnZoneChanged(eventCode, zoneName, subZoneName, newSubzone, zoneId, subZoneId)
   internal:dm("Debug", "OnZoneChanged")
   lib.reticleInteractionName = nil
+  lib.lastInteractionTarget = nil
   if internal:SetPlayerLocation() then
     internal:UpdateMapInfo()
+    lib.callbackObject:FireCallbacks(lib.callbackType.EVENT_ZONE_CHANGED)
   end
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_zone_changed", EVENT_ZONE_CHANGED, OnZoneChanged)
@@ -151,12 +183,11 @@ local climbLocalization = {
 local wordClimb = climbLocalization[GetCVar("Language.2")]
 local approved_interaction_types = {
   [GetString(SI_GAMECAMERAACTIONTYPE1)] = true, -- Search
-  [GetString(SI_GAMECAMERAACTIONTYPE5)] = true,  -- Use
-  [GetString(SI_GAMECAMERAACTIONTYPE13)] = true,  -- Open
+  [GetString(SI_GAMECAMERAACTIONTYPE5)] = true, -- Use
+  [GetString(SI_GAMECAMERAACTIONTYPE13)] = true, -- Open
   [GetString(SI_GAMECAMERAACTIONTYPE6)] = true, -- Read
   [GetString(SI_GAMECAMERAACTIONTYPE10)] = true, -- Inspect
   [GetString(SI_GAMECAMERAACTIONTYPE15)] = true, -- Examine
-  [wordClimb] = true, -- Climb
 }
 
 ZO_PreHook(ZO_Reticle, "TryHandlingInteraction", function(interactionPossible, currentFrameTimeSeconds)
@@ -165,7 +196,7 @@ ZO_PreHook(ZO_Reticle, "TryHandlingInteraction", function(interactionPossible, c
     local validInteraction = approved_interaction_types[action]
     if name and validInteraction and not interactBlocked then
       lib.reticleInteractionName = name
-    else
+    elseif not validInteraction then
       lib.reticleInteractionName = nil
     end
   end
@@ -173,34 +204,75 @@ end)
 
 local function OnWorldPositionChanged(eventCode, clientInteractResult, interactTargetName)
   lib.reticleInteractionName = nil
-    if internal:SetPlayerLocation() then
-      internal:UpdateMapInfo()
-    end
+  lib.lastInteractionTarget = nil
+  if internal:SetPlayerLocation() then
+    internal:UpdateMapInfo()
+    lib.callbackObject:FireCallbacks(lib.callbackType.EVENT_LINKED_WORLD_POSITION_CHANGED)
+  end
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_OnWorldPositionChanged", EVENT_LINKED_WORLD_POSITION_CHANGED, OnWorldPositionChanged)
 
 local function OnPlayerActivated(eventCode, initial)
   if not initial then
     lib.reticleInteractionName = nil
+    lib.lastInteractionTarget = nil
     if internal:SetPlayerLocation() then
       internal:UpdateMapInfo()
+      lib.callbackObject:FireCallbacks(lib.callbackType.EVENT_PLAYER_ACTIVATED)
     end
   end
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_activated", EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
 
+local function OnPlayerDeactivated(eventCode)
+    lib.reticleInteractionName = nil
+    lib.lastInteractionTarget = nil
+end
+EVENT_MANAGER:RegisterForEvent(libName .. "_OnPlayerDeactivated", EVENT_PLAYER_DEACTIVATED, OnPlayerDeactivated)
+
 CALLBACK_MANAGER:RegisterCallback("OnWorldMapChanged", function()
   internal:UpdateMapInfo()
+  lib.callbackObject:FireCallbacks(lib.callbackType.OnWorldMapChanged)
 end)
 
 WORLD_MAP_SCENE:RegisterCallback("StateChange", function(oldState, newState)
   if newState == SCENE_SHOWING then
     internal:UpdateMapInfo()
+    lib.callbackObject:FireCallbacks(lib.callbackType.WorldMapSceneStateChange)
   elseif newState == SCENE_HIDDEN then
     internal:SetPlayerLocation()
     internal:UpdateMapInfo()
+    lib.callbackObject:FireCallbacks(lib.callbackType.WorldMapSceneStateChange)
   end
 end)
+
+local function OnInteract(eventCode, result, interactTargetName)
+  --internal.dm("Debug", "OnInteract Occured")
+  --d(client_interact_result)
+  local text = zo_strformat(SI_CHAT_MESSAGE_FORMATTER, interactTargetName)
+  --internal.dm("Debug", text)
+  lib.lastInteractionTarget = text
+end
+EVENT_MANAGER:RegisterForEvent(libName .. "_OnInteract", EVENT_CLIENT_INTERACT_RESULT, OnInteract)
+
+--[[ added mostly for LibQuestData so hopefully eroneous names are not assigned
+to quest info for the NPC
+]]--
+local function OnQuestSharred(eventCode, questID)
+    lib.reticleInteractionName = nil
+    lib.lastInteractionTarget = nil
+    lib.questShared = true
+end
+EVENT_MANAGER:RegisterForEvent(libName .. "_OnQuestSharred", EVENT_QUEST_SHARED, OnQuestSharred) -- Verified
+
+--[[ added mostly for LibQuestData so hopefully eroneous names are not assigned
+to quest info for the NPC
+]]--
+local function OnPrepareForJump(eventCode, zoneName, zoneDescription, loadingTexture, instanceDisplayType)
+    lib.reticleInteractionName = nil
+    lib.lastInteractionTarget = nil
+end
+EVENT_MANAGER:RegisterForEvent(libName .. "_OnPrepareForJump", EVENT_PREPARE_FOR_JUMP, OnPrepareForJump)
 
 -----
 --- Check for multiple MapNames with different IDs
@@ -397,7 +469,7 @@ local function GetPlayerPos()
   internal:dm("Debug", "isMainZone: " .. tostring(lib.isMainZone))
   internal:dm("Debug", "isSubzone: " .. tostring(lib.isSubzone))
   internal:dm("Debug", "isWorld: " .. tostring(lib.isWorld))
-  if lib.currentFloor then
+  if lib.currentFloor and lib.numFloors then
     local floorString = string.format("currentFloor: %d of %d", lib.currentFloor, lib.numFloors)
     internal:dm("Debug", floorString)
   end
