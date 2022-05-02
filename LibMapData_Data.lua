@@ -141,6 +141,15 @@ lib.deshaanData = {
   [1153] = {
     ["pseudoMapIndex"] = LIBMAPDATA_DESHAAN_PSEUDOMAPINDEX,
   },
+  [2042] = {
+    ["mapTexture"] = "deshaan/cauldronmapboss5_0",
+    ["pseudoMapIndex"] = LIBMAPDATA_DESHAAN_PSEUDOMAPINDEX,
+    ["mapScale"] = {
+            zoom_factor = 0.0160155036,
+            x = 0.0557703860,
+            y = 0.5129439831,
+    },
+  },
 }
 
 lib.stonefallsData = {
