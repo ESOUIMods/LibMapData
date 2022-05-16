@@ -17,15 +17,15 @@ lib.callbackObject = {}
 lib.callbackObject = callbackObject
 
 function lib:RegisterCallback(...)
-    return lib.callbackObject:RegisterCallback(...)
+  return lib.callbackObject:RegisterCallback(...)
 end
 
 function lib:UnregisterCallback(...)
-    return lib.callbackObject:UnregisterCallback(...)
+  return lib.callbackObject:UnregisterCallback(...)
 end
 
 function lib:FireCallbacks(...)
-    return callbackObject:FireCallbacks(...)
+  return callbackObject:FireCallbacks(...)
 end
 
 lib.mapNames = {}
@@ -120,6 +120,7 @@ prevent unnecessary refreshing of information.
 ]]--
 -- /script LibMapData_Internal:SetPlayerLocation()
 function internal:SetPlayerLocation(force)
+  internal:dm("Debug", "SetPlayerLocation")
   local originalMap = GetMapTileTexture()
   if SetMapToPlayerLocation() == SET_MAP_RESULT_FAILED then
     internal:dm("Warn", "SetMapToPlayerLocation Failed")
@@ -129,8 +130,8 @@ function internal:SetPlayerLocation(force)
     return true
   end
   return false
-  -- SET_MAP_RESULT_CURRENT_MAP_UNCHANGED
 end
+
 -- /script LibMapData_Internal:UpdateMapInfo()
 function internal:UpdateMapInfo()
   local zoneIndex = GetCurrentMapZoneIndex()
@@ -171,9 +172,9 @@ local function OnZoneChanged(eventCode, zoneName, subZoneName, newSubzone, zoneI
   lib.reticleInteractionName = nil
   lib.lastInteractionTarget = nil
   if internal:SetPlayerLocation() then
-    internal:UpdateMapInfo()
     lib.callbackObject:FireCallbacks(lib.callbackType.EVENT_ZONE_CHANGED)
   end
+  internal:UpdateMapInfo()
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_zone_changed", EVENT_ZONE_CHANGED, OnZoneChanged)
 
@@ -203,39 +204,45 @@ ZO_PreHook(ZO_Reticle, "TryHandlingInteraction", function(interactionPossible, c
 end)
 
 local function OnWorldPositionChanged(eventCode, clientInteractResult, interactTargetName)
+  internal:dm("Debug", "OnWorldPositionChanged")
   lib.reticleInteractionName = nil
   lib.lastInteractionTarget = nil
   if internal:SetPlayerLocation() then
-    internal:UpdateMapInfo()
     lib.callbackObject:FireCallbacks(lib.callbackType.EVENT_LINKED_WORLD_POSITION_CHANGED)
   end
+  internal:UpdateMapInfo()
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_OnWorldPositionChanged", EVENT_LINKED_WORLD_POSITION_CHANGED, OnWorldPositionChanged)
 
 local function OnPlayerActivated(eventCode, initial)
+  if initial then
+    internal:SetPlayerLocation()
+  end
   if not initial then
     lib.reticleInteractionName = nil
     lib.lastInteractionTarget = nil
     if internal:SetPlayerLocation() then
-      internal:UpdateMapInfo()
       lib.callbackObject:FireCallbacks(lib.callbackType.EVENT_PLAYER_ACTIVATED)
     end
   end
+  internal:UpdateMapInfo()
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_activated", EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
 
 local function OnPlayerDeactivated(eventCode)
-    lib.reticleInteractionName = nil
-    lib.lastInteractionTarget = nil
+  lib.reticleInteractionName = nil
+  lib.lastInteractionTarget = nil
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_OnPlayerDeactivated", EVENT_PLAYER_DEACTIVATED, OnPlayerDeactivated)
 
 CALLBACK_MANAGER:RegisterCallback("OnWorldMapChanged", function()
+  internal:dm("Debug", "OnWorldMapChanged")
   internal:UpdateMapInfo()
   lib.callbackObject:FireCallbacks(lib.callbackType.OnWorldMapChanged)
 end)
 
 WORLD_MAP_SCENE:RegisterCallback("StateChange", function(oldState, newState)
+  internal:dm("Debug", "On StateChange")
   if newState == SCENE_SHOWING then
     internal:UpdateMapInfo()
     lib.callbackObject:FireCallbacks(lib.callbackType.WorldMapSceneStateChange)
@@ -259,9 +266,9 @@ EVENT_MANAGER:RegisterForEvent(libName .. "_OnInteract", EVENT_CLIENT_INTERACT_R
 to quest info for the NPC
 ]]--
 local function OnQuestSharred(eventCode, questID)
-    lib.reticleInteractionName = nil
-    lib.lastInteractionTarget = nil
-    lib.questShared = true
+  lib.reticleInteractionName = nil
+  lib.lastInteractionTarget = nil
+  lib.questShared = true
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_OnQuestSharred", EVENT_QUEST_SHARED, OnQuestSharred) -- Verified
 
@@ -269,8 +276,8 @@ EVENT_MANAGER:RegisterForEvent(libName .. "_OnQuestSharred", EVENT_QUEST_SHARED,
 to quest info for the NPC
 ]]--
 local function OnPrepareForJump(eventCode, zoneName, zoneDescription, loadingTexture, instanceDisplayType)
-    lib.reticleInteractionName = nil
-    lib.lastInteractionTarget = nil
+  lib.reticleInteractionName = nil
+  lib.lastInteractionTarget = nil
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_OnPrepareForJump", EVENT_PREPARE_FOR_JUMP, OnPrepareForJump)
 
@@ -498,12 +505,10 @@ end
 
 local function OnAddOnLoaded(eventCode, addonName)
   if addonName == libName then
+    internal:dm("Debug", "OnAddOnLoaded")
     EVENT_MANAGER:UnregisterForEvent(libName .. "_onload", EVENT_ADD_ON_LOADED)
 
     SLASH_COMMANDS["/lmdgetpos"] = function() GetPlayerPos() end -- used
-
-    internal:SetPlayerLocation()
-    internal:UpdateMapInfo()
 
     --BuildMapIndexTable()
     --BuildZoneIdTable()

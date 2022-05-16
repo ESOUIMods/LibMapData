@@ -145,9 +145,9 @@ lib.deshaanData = {
     ["mapTexture"] = "deshaan/cauldronmapboss5_0",
     ["pseudoMapIndex"] = LIBMAPDATA_DESHAAN_PSEUDOMAPINDEX,
     ["mapScale"] = {
-            zoom_factor = 0.0160155036,
-            x = 0.0557703860,
-            y = 0.5129439831,
+      zoom_factor = 0.0160155036,
+      x = 0.0557703860,
+      y = 0.5129439831,
     },
   },
 }
@@ -214,6 +214,15 @@ lib.reapers_MarchData = {
   ["subZones"] = { },
   ["dungeons"] = { },
   ["events"] = { },
+  [997] = {
+    ["mapTexture"] = "reapersmarch/maw_of_lorkaj_base_0",
+    ["pseudoMapIndex"] = LIBMAPDATA_REAPERS_MARCH_PSEUDOMAPINDEX,
+    ["mapScale"] = {
+      zoom_factor = 0.0085498988,
+      x = 0.2280121892,
+      y = 0.7320250272,
+    },
+  },
 }
 
 lib.bal_FoyenData = {
