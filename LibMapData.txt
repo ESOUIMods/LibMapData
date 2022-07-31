@@ -1,11 +1,11 @@
 ## Title: LibMapData
 ## Author: Sharlikran
-## Version: 1.03
-## AddOnVersion: 103
+## Version: 1.04
+## AddOnVersion: 104
 ## IsLibrary: true
-## APIVersion: 101033 101034
+## APIVersion: 101034 101035
 ## SavedVariables: LibMapData_SavedVariables
-## DependsOn: LibGPS>=66
+## DependsOn: LibGPS>=68
 ## OptionalDependsOn: LibDebugLogger>=220 DebugLogViewer>=558
 
 ## This Add-on is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates.
