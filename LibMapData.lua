@@ -510,6 +510,7 @@ local function OnAddOnLoaded(eventCode, addonName)
 
     SLASH_COMMANDS["/lmdgetpos"] = function() GetPlayerPos() end -- used
 
+    -- DEBUG
     --BuildMapIndexTable()
     --BuildZoneIdTable()
 

@@ -1,9 +1,9 @@
 ## Title: LibMapData
 ## Author: Sharlikran
-## Version: 1.04
-## AddOnVersion: 104
+## Version: 1.05
+## AddOnVersion: 105
 ## IsLibrary: true
-## APIVersion: 101034 101035
+## APIVersion: 101035 101036
 ## SavedVariables: LibMapData_SavedVariables
 ## DependsOn: LibGPS>=68
 ## OptionalDependsOn: LibDebugLogger>=220 DebugLogViewer>=558

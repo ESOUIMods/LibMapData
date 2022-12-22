@@ -165,6 +165,14 @@ lib.stonefallsData = {
         x = 0.9166180491,
         y = 0.3022293746,
       },
+      ["Witchmother Olyve"] = {
+        x = 0.4950504899,
+        y = 0.7059394121,
+      },
+      ["Witchmother Taerma"] = {
+        x = 0.4963544607,
+        y = 0.7065058946,
+      },
     },
   },
 }
@@ -664,6 +672,18 @@ lib.high_IsleData = {
   ["events"] = { },
 }
 
+lib.fargraveCityData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
+}
+
+lib.galenData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
+}
+
 lib.mapIndexData = {
   [1] = {
     ["mapTexture"] = "",
@@ -1054,15 +1074,29 @@ lib.mapIndexData = {
     ["mapsData"] = lib.blackwoodData,
   },
   [44] = {
+    --[[Map name is Fargrave, zoneName is The Shambles
+    This is when you are looking down at Fargrave City and The Shambles
+    before you zoom in. This main map is not considered a subzone,
+    The map has a mapIndex, if you zoom into the map for The Shambles it does not
+    and the specific Shambles map, is considered a subzone
+
+    Because of the unique situtaion the mapsData is fargraveData rather then shamblesData.
+    If there is a need for shamblesData at a later date then it will refer to the unique
+    Shambles map itself.
+
+    The zoneName is The Shambles rather then Fargrave because that's what the game will
+    return for the zoneName using the zoneIndex as well as using GetZoneNameById if we used
+    the zoneId]]--
     ["mapTexture"] = "deadlands/u32_fargravezone_base_0",
     ["mapIndex"] = 44,
     ["mapId"] = 2119,
     ["zoneIndex"] = 854,
-    ["zoneName"] = "Fargrave",
+    ["zoneName"] = "The Shambles",
     ["zoneId"] = 1283,
     ["mapsData"] = lib.fargraveData,
   },
   [45] = {
+    -- The Deadlands Zone, nothing to do with Fargrave
     ["mapTexture"] = "deadlands/u32deadlandszone_base_0",
     ["mapIndex"] = 45,
     ["mapId"] = 2021,
@@ -1079,5 +1113,26 @@ lib.mapIndexData = {
     ["zoneName"] = "High Isle",
     ["zoneId"] = 1318,
     ["mapsData"] = lib.high_IsleData,
+  },
+  [47] = {
+    -- Map name is Fargrave City District
+    -- zoneName is Fargrave
+    -- This is when you are looking at the Fargrave City District itself
+    ["mapTexture"] = "deadlands/u32_fargrave_base_0",
+    ["mapIndex"] = 47,
+    ["mapId"] = 2035,
+    ["zoneIndex"] = 853,
+    ["zoneName"] = "Fargrave",
+    ["zoneId"] = 1282,
+    ["mapsData"] = lib.fargraveCityData,
+  },
+  [48] = {
+    ["mapTexture"] = "galen/u36_galenisland_base_0",
+    ["mapIndex"] = 48,
+    ["mapId"] = 2212,
+    ["zoneIndex"] = 928,
+    ["zoneName"] = "Galen",
+    ["zoneId"] = 1383,
+    ["mapsData"] = lib.galenData,
   },
 }
