@@ -58,6 +58,7 @@ lib.lastMapId = nil
 lib.wasSetMapToPlayerLocationCalled = false
 lib.setMapToPlayerLocationQueueInProgress = false
 lib.onPrepareForJumpInProgress = false
+lib.onAddonLoadInProgress = true
 lib.SetMapToPlayerLocationQueueStart = 0
 
 lib.MAPINDEX_MIN = 1
@@ -211,7 +212,14 @@ function internal:SetUpSetPlayerLocationQueue()
     internal:dm("Debug", "No Queue, Jump In Progress")
     return
   end
-  if lib.setMapToPlayerLocationQueueInProgress  then return end
+  if lib.setMapToPlayerLocationQueueInProgress  then
+    internal:dm("Debug", "-> Queue In Progress <-")
+    return
+  end
+  if lib.onAddonLoadInProgress  then
+    internal:dm("Debug", "-> Addon Load In Progress <-")
+    return
+  end
   lib.SetMapToPlayerLocationQueueStart = GetTimeStamp()
   internal:CheckSetPlayerLocationQueue()
 end
@@ -262,23 +270,6 @@ function internal:UpdateMapInfo()
   internal:dm("Debug", tostring(GetTimeStamp()) .. " :-->> End UpdateMapInfo <<--")
 end
 
-local function OnZoneChanged(eventCode, zoneName, subZoneName, newSubzone, zoneId, subZoneId)
-  internal:dm("Debug", tostring(GetTimeStamp()) .. " :OnZoneChanged")
-  internal:dm("Debug", "- Clear target and reticle  -")
-  lib.reticleInteractionName = nil
-  lib.lastInteractionTarget = nil
-  lib.newSubzone = newSubzone
-
-  if zoneName ~= "" then internal:dm("Debug", "zoneName: " .. zoneName) end
-  if subZoneName ~= "" then internal:dm("Debug", "subZoneName: " .. subZoneName) end
-  internal:dm("Debug", "New Subzone: " .. tostring(lib.newSubzone))
-  internal:dm("Debug", "zoneId: " .. tostring(zoneId))
-  internal:dm("Debug", "subZoneId: " .. tostring(subZoneId))
-
-  internal:SetUpSetPlayerLocationQueue()
-end
-EVENT_MANAGER:RegisterForEvent(libName .. "_zone_changed", EVENT_ZONE_CHANGED, OnZoneChanged)
-
 local climbLocalization = {
   ["en"] = "Climb",
 }
@@ -304,6 +295,36 @@ ZO_PreHook(ZO_Reticle, "TryHandlingInteraction", function(interactionPossible, c
   end
 end)
 
+--[[ added mostly for LibQuestData so hopefully eroneous names are not assigned
+to quest info for the NPC
+]]--
+local function OnPrepareForJump(eventCode, zoneName, zoneDescription, loadingTexture, instanceDisplayType)
+  internal:dm("Debug", "OnPrepareForJump")
+  internal:dm("Debug", "- Clear target and reticle  -")
+  lib.reticleInteractionName = nil
+  lib.lastInteractionTarget = nil
+  internal:dm("Debug", "- Set Jump In Progress true  -")
+  lib.onPrepareForJumpInProgress = true
+end
+EVENT_MANAGER:RegisterForEvent(libName .. "_OnPrepareForJump", EVENT_PREPARE_FOR_JUMP, OnPrepareForJump)
+
+local function OnZoneChanged(eventCode, zoneName, subZoneName, newSubzone, zoneId, subZoneId)
+  internal:dm("Debug", tostring(GetTimeStamp()) .. " :OnZoneChanged")
+  internal:dm("Debug", "- Clear target and reticle  -")
+  lib.reticleInteractionName = nil
+  lib.lastInteractionTarget = nil
+  lib.newSubzone = newSubzone
+
+  if zoneName ~= "" then internal:dm("Debug", "zoneName: " .. zoneName) end
+  if subZoneName ~= "" then internal:dm("Debug", "subZoneName: " .. subZoneName) end
+  internal:dm("Debug", "New Subzone: " .. tostring(lib.newSubzone))
+  internal:dm("Debug", "zoneId: " .. tostring(zoneId))
+  internal:dm("Debug", "subZoneId: " .. tostring(subZoneId))
+
+  internal:SetUpSetPlayerLocationQueue()
+end
+EVENT_MANAGER:RegisterForEvent(libName .. "_zone_changed", EVENT_ZONE_CHANGED, OnZoneChanged)
+
 local function OnWorldPositionChanged(eventCode, clientInteractResult, interactTargetName)
   internal:dm("Debug", tostring(GetTimeStamp()) .. " :OnWorldPositionChanged")
   internal:dm("Debug", "- Clear target and reticle  -")
@@ -326,7 +347,8 @@ local function OnPlayerActivated(eventCode, initial)
   end
   internal:dm("Debug", "- Clear Set Jump In Progress -")
   lib.onPrepareForJumpInProgress = false
-  internal:UpdateMapInfo()
+  internal:dm("Debug", "- Clear Addon Load In Progress -")
+  lib.onAddonLoadInProgress = false
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_activated", EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
 
@@ -355,13 +377,17 @@ CALLBACK_MANAGER:RegisterCallback("OnWorldMapChanged", function()
   internal:dm("Debug", "-->> Updated <<--")
   internal:dm("Debug", lib.lastMapTexture)
   internal:dm("Debug", lib.lastMapId)
-  internal:dm("Debug", "-->> Update MapId and Texture after OnWorldMapChanged<<--")
+  internal:dm("Debug", "-->>UpdateMapInfo now that last mapId and mapTexture are set <<--")
   internal:UpdateMapInfo()
   internal:SetWasSetMapToPlayerLocationCalledFalse()
+  internal:MapTextureMapIdUpdated()
 end)
 
 WORLD_MAP_SCENE:RegisterCallback("StateChange", function(oldState, newState)
   internal:dm("Debug", tostring(GetTimeStamp()) .. " :On StateChange")
+  internal:dm("Debug", "-->> Reset Queue Variables <<--")
+  lib.SetMapToPlayerLocationQueueStart = 0
+  lib.setMapToPlayerLocationQueueInProgress = false
   if newState == SCENE_SHOWING then
     internal:dm("Debug", "SCENE_SHOWING")
     -- internal:UpdateMapInfo()
@@ -392,19 +418,6 @@ local function OnQuestSharred(eventCode, questID)
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_OnQuestSharred", EVENT_QUEST_SHARED, OnQuestSharred) -- Verified
 
---[[ added mostly for LibQuestData so hopefully eroneous names are not assigned
-to quest info for the NPC
-]]--
-local function OnPrepareForJump(eventCode, zoneName, zoneDescription, loadingTexture, instanceDisplayType)
-  internal:dm("Debug", "OnPrepareForJump")
-  internal:dm("Debug", "- Clear target and reticle  -")
-  lib.reticleInteractionName = nil
-  lib.lastInteractionTarget = nil
-  internal:dm("Debug", "- Set Jump In Progress true  -")
-  lib.onPrepareForJumpInProgress = true
-end
-EVENT_MANAGER:RegisterForEvent(libName .. "_OnPrepareForJump", EVENT_PREPARE_FOR_JUMP, OnPrepareForJump)
-
 -----
 --- Check for multiple MapNames with different IDs
 -----
@@ -419,18 +432,6 @@ function internal:ContainsIndex(indexTable, indexToFind)
       if index == indexToFind then
         foundId = true
       end
-    end
-  end
-  return foundId
-end
-
-function internal:TableContainsIndex(indexTable, indexToFind)
-  if not indexToFind then return true end
-  local foundId = false
-  for _, index in pairs(indexTable) do
-    -- internal:dm("Debug", index)
-    if index == indexToFind then
-      foundId = true
     end
   end
   return foundId
@@ -713,15 +714,18 @@ local function OnAddOnLoaded(eventCode, addonName)
     internal:dm("Debug", "->> Initial SetUp <<-")
     --[[Initial SetUp happens in OnAddOnLoaded because OnWorldPositionChanged
     will run prior to OnPlayerActivated so using the 'initial' flag from that is useless here]]--
-    SetMapToPlayerLocation()
     lib:SetMapIdFromAPI()
     lib:GetMapTileTextureFromMapId(lib.mapId)
     if lib.lastMapTexture == nil then lib.lastMapTexture = lib.mapTexture end
     if lib.lastMapId == nil then lib.lastMapId = lib.mapId end
-    --[[ newSubzone is true for some reason for OnAddOnLoaded prior to OnWorldPositionChanged
-    or OnPlayerActivated but it is only set in OnZoneChanged ]]--
+    --[[newSubzone is true for some reason for OnAddOnLoaded prior to OnWorldPositionChanged
+    or OnPlayerActivated but it is only set in OnZoneChanged.
+
+    set setMapToPlayerLocationQueueInProgress also as it seems to be true after OnAddOnLoaded
+    as well.
+    ]]--
     lib.newSubzone = false
-    internal:UpdateMapInfo()
+    lib.setMapToPlayerLocationQueueInProgress = false
 
   end
 end
