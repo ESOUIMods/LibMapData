@@ -54,10 +54,10 @@ lib.questShared = false -- for LibQuestData
 lib.pseudoMapIndex = nil
 
 lib.MAPINDEX_MIN = 1
-lib.MAPINDEX_MAX = 46 -- 45
-lib.MAX_NUM_MAPIDS = 2223 -- 2192
-lib.MAX_NUM_ZONEINDEXES = 907 -- 881
-lib.MAX_NUM_ZONEIDS = 1364 -- 1345
+lib.MAPINDEX_MAX = 48 -- 45, 46
+lib.MAX_NUM_MAPIDS = 2314 -- 2192, 2223
+lib.MAX_NUM_ZONEINDEXES = 931 -- 881, 907
+lib.MAX_NUM_ZONEIDS = 1387 -- 1345, 1364
 -- max zoneId 1345 using valid zoneIndex
 
 -----
@@ -311,6 +311,7 @@ function internal:TableContainsIndex(indexTable, indexToFind)
   end
   return foundId
 end
+
 -----
 --- MapNames
 -----
@@ -423,17 +424,18 @@ local function BuildMapIndexTable()
     local name, mapType, mapContentType, zoneIndex, description = GetMapInfoByIndex(i)
     if name ~= "" then
       local mapId = GetMapIdByIndex(i)
+      local zoneId = GetZoneId(zoneIndex)
       local theInfo = {
         ["mapTexture"] = GetMapTileTextureForMapId(mapId, 1),
         ["mapIndex"] = i,
         ["mapId"] = mapId,
         ["zoneIndex"] = zoneIndex,
         ["zoneName"] = GetZoneNameByIndex(zoneIndex),
-        ["zoneId"] = GetZoneId(zoneIndex),
+        ["zoneId"] = zoneId,
       }
       built_table[i] = theInfo
 
-      if maxMapIndex == nil or maxMapIndex < zoneId then maxMapIndex = i end
+      if maxMapIndex == nil or maxMapIndex < i then maxMapIndex = i end
     end
   end
   internal:dm("Debug", maxMapIndex)
@@ -448,7 +450,7 @@ local function BuildZoneIdTable()
   for i = 1, 30000 do
     local zoneName = GetZoneNameById(i)
     if zoneName ~= "" then
-      if maxZoneId == nil or maxZoneId < zoneId then maxZoneId = i end
+      if maxZoneId == nil or maxZoneId < i then maxZoneId = i end
     end
   end
   internal:dm("Debug", maxZoneId)
@@ -525,26 +527,29 @@ end
 EVENT_MANAGER:RegisterForEvent(libName .. "_onload", EVENT_ADD_ON_LOADED, OnAddOnLoaded)
 
 if LibDebugLogger then
-  local logger = LibDebugLogger.Create(libName)
-  lib.logger = logger
+  lib.logger = LibDebugLogger.Create(libName)
 end
 
+local logger
+local viewer
+if DebugLogViewer then viewer = true else viewer = false end
+if LibDebugLogger then logger = true else logger = false end
+
 local function create_log(log_type, log_content)
-  if not DebugLogViewer and log_type == "Info" then
+  if not viewer and log_type == "Info" then
     CHAT_ROUTER:AddSystemMessage(log_content)
     return
   end
-  if not LibDebugLogger then return end
-  if log_type == "Debug" then
+  if logger and log_type == "Debug" then
     lib.logger:Debug(log_content)
   end
-  if log_type == "Info" then
+  if logger and log_type == "Info" then
     lib.logger:Info(log_content)
   end
-  if log_type == "Verbose" then
+  if logger and log_type == "Verbose" then
     lib.logger:Verbose(log_content)
   end
-  if log_type == "Warn" then
+  if logger and log_type == "Warn" then
     lib.logger:Warn(log_content)
   end
 end
