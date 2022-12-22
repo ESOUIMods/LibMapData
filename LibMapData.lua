@@ -1,4 +1,4 @@
-local libName, libVersion = "LibMapData", 105
+local libName, libVersion = "LibMapData", 106
 local lib = {}
 local internal = {}
 _G["LibMapData"] = lib
@@ -41,6 +41,7 @@ lib.zoneId = nil
 lib.mapTexture = nil
 lib.isMainZone = nil
 lib.isSubzone = nil
+lib.newSubzone = false
 lib.isWorld = nil
 lib.isDungeon = nil
 lib.zoneName = nil
@@ -52,6 +53,13 @@ lib.reticleInteractionName = nil
 lib.lastInteractionTarget = nil
 lib.questShared = false -- for LibQuestData
 lib.pseudoMapIndex = nil
+lib.lastMapTexture = nil
+lib.lastMapId = nil
+lib.wasSetMapToPlayerLocationCalled = false
+lib.setMapToPlayerLocationQueueInProgress = false
+lib.onPrepareForJumpInProgress = false
+lib.onAddonLoadInProgress = true
+lib.SetMapToPlayerLocationQueueStart = 0
 
 lib.MAPINDEX_MIN = 1
 lib.MAPINDEX_MAX = 48 -- 45, 46
@@ -59,6 +67,7 @@ lib.MAX_NUM_MAPIDS = 2314 -- 2192, 2223
 lib.MAX_NUM_ZONEINDEXES = 931 -- 881, 907
 lib.MAX_NUM_ZONEIDS = 1387 -- 1345, 1364
 -- max zoneId 1345 using valid zoneIndex
+lib.MAX_ATTEMPT_MAP_UPDATE_SECONDS = 15
 
 -----
 --- API functions
@@ -107,57 +116,129 @@ function lib:GetMapTileTextureFromMapId(mapId)
   mapTexture = mapTexture:gsub("%.dds$", "")
   lib.mapTexture = mapTexture
 end
--- /script d(LibMapData:GetZoneMapIdFromMapId(mapId))
--- /script d(GetMapNameById(mapId))
+
+function lib:SetMapIdFromAPI()
+  lib.mapId = GetCurrentMapId()
+end
+
 -----
---- Utility functions
+--- Internal Callback Functions for Queue
 -----
 
---[[Returns true when the map information changed.
+function internal:FireCallbackEventZoneChanged()
+  internal:dm("Debug", "Fire LMD Callback EVENT_ZONE_CHANGED")
+  lib.callbackObject:FireCallbacks(lib.callbackType.EVENT_ZONE_CHANGED)
+end
 
-Returns false when map information is unchanged to
-prevent unnecessary refreshing of information.
-]]--
--- /script LibMapData_Internal:SetPlayerLocation()
-function internal:SetPlayerLocation(force)
-  internal:dm("Debug", "SetPlayerLocation")
-  local originalMap = GetMapTileTexture()
-  if SetMapToPlayerLocation() == SET_MAP_RESULT_FAILED then
-    internal:dm("Warn", "SetMapToPlayerLocation Failed")
+function internal:FireCallbackWorldPositionChanged()
+  internal:dm("Debug", "Fire LMD Callback EVENT_LINKED_WORLD_POSITION_CHANGED")
+  lib.callbackObject:FireCallbacks(lib.callbackType.EVENT_LINKED_WORLD_POSITION_CHANGED)
+end
+
+function internal:FireCallbackEventPlayerActivated()
+  internal:dm("Debug", "Fire LMD Callback EVENT_PLAYER_ACTIVATED")
+  lib.callbackObject:FireCallbacks(lib.callbackType.EVENT_PLAYER_ACTIVATED)
+end
+
+function internal:FireCallbackOnWorldMapChanged()
+  internal:dm("Debug", "Fire LMD Callback OnWorldMapChanged")
+  lib.callbackObject:FireCallbacks(lib.callbackType.OnWorldMapChanged)
+end
+
+function internal:FireCallbackWorldMapSceneStateChange()
+  internal:dm("Debug", "Fire LMD Callback WorldMapSceneStateChange")
+  lib.callbackObject:FireCallbacks(lib.callbackType.WorldMapSceneStateChange)
+end
+
+-----
+--- Internal functions
+-----
+
+function internal:SetWasSetMapToPlayerLocationCalledFalse()
+  if lib.wasSetMapToPlayerLocationCalled then
+    -- internal:dm("Debug", "-->> Set wasSetMapToPlayerLocationCalled False <<--")
+    lib.wasSetMapToPlayerLocationCalled = false
+    return
   end
-  if GetMapTileTexture() ~= originalMap or force then
-    CALLBACK_MANAGER:FireCallbacks("OnWorldMapChanged")
+  if not lib.wasSetMapToPlayerLocationCalled then
+    -- internal:dm("Debug", "<< Set wasSetMapToPlayerLocationCalled Was Already False >>")
+    return
+  end
+end
+
+-- /script LibMapData_Internal:SetUpSetPlayerLocationQueue()
+function internal:MapTextureMapIdUpdated()
+  local mapTextureMapIdUnchanged = lib.mapId == lib.lastMapId and lib.mapTexture == lib.lastMapTexture
+  if mapTextureMapIdUnchanged then
+    return false
+  else
     return true
   end
-  return false
+end
+
+function internal:CheckSetPlayerLocationQueue()
+  if ZO_WorldMap_IsWorldMapShowing() then return end
+  lib.setMapToPlayerLocationQueueInProgress = true
+
+  local timeElapsed = GetTimeStamp() - lib.SetMapToPlayerLocationQueueStart
+  if timeElapsed > lib.MAX_ATTEMPT_MAP_UPDATE_SECONDS then
+    lib.SetMapToPlayerLocationQueueStart = 0
+    lib.setMapToPlayerLocationQueueInProgress = false
+    internal:UpdateMapInfo()
+  else
+    local SetMapToPlayerLocationResult = SetMapToPlayerLocation()
+    if SetMapToPlayerLocationResult == SET_MAP_RESULT_MAP_CHANGED then
+      CALLBACK_MANAGER:FireCallbacks("OnWorldMapChanged")
+    else
+      zo_callLater(function() internal:CheckSetPlayerLocationQueue() end, 1000)
+    end
+  end
+end
+
+-- /script LibMapData_Internal:SetUpSetPlayerLocationQueue()
+function internal:SetUpSetPlayerLocationQueue()
+  if ZO_WorldMap_IsWorldMapShowing() then return end
+  if lib.onPrepareForJumpInProgress then
+    return
+  end
+  if lib.setMapToPlayerLocationQueueInProgress then
+    return
+  end
+  if lib.onAddonLoadInProgress then
+    return
+  end
+  lib.SetMapToPlayerLocationQueueStart = GetTimeStamp()
+  internal:CheckSetPlayerLocationQueue()
 end
 
 -- /script LibMapData_Internal:UpdateMapInfo()
 function internal:UpdateMapInfo()
   local zoneIndex = GetCurrentMapZoneIndex()
   local mapIndex = GetCurrentMapIndex()
-  local mapId = GetCurrentMapId()
+  -- no lib.mapId = because this sets the global variable lib.mapId
+  lib:SetMapIdFromAPI()
   local zoneId = GetZoneId(zoneIndex)
   local currentFloor, numFloors = GetMapFloorInfo()
 
   lib.zoneIndex = zoneIndex
   lib.mapIndex = mapIndex
-  lib.mapId = mapId
+  --[[We do not set the mapId because of SetMapIdFromAPI() ]]--
+  -- lib.mapId = mapId
   lib.zoneId = zoneId
   lib.currentFloor = currentFloor
   lib.numFloors = numFloors
 
-  -- no lib.x = because this sets the global variable lib.mapTexture
-  lib:GetMapTileTextureFromMapId(mapId)
+  -- no lib.mapTexture = because this sets the global variable lib.mapTexture
+  lib:GetMapTileTextureFromMapId(lib.mapId)
 
-  local name, mapType, mapContentType, zoneIndex, description = GetMapInfoById(mapId)
+  local name, mapType, mapContentType, zoneIndex, description = GetMapInfoById(lib.mapId)
   lib.isMainZone = mapType == MAPTYPE_ZONE
   lib.isSubzone = mapType == MAPTYPE_SUBZONE
   lib.isWorld = mapType == MAPTYPE_WORLD
   lib.isDungeon = mapContentType == MAP_CONTENT_DUNGEON
 
   local zoneName = GetZoneNameByIndex(zoneIndex)
-  local mapName = GetMapNameById(mapId)
+  local mapName = GetMapNameById(lib.mapId)
   if not zoneName then zoneName = "[Empty String]" end
   if not mapName then mapName = "[Empty String]" end
   lib.zoneName = zoneName
@@ -166,17 +247,6 @@ function internal:UpdateMapInfo()
   if subzoneName == "" then subzoneName = nil end
   lib.subzoneName = subzoneName
 end
-
-local function OnZoneChanged(eventCode, zoneName, subZoneName, newSubzone, zoneId, subZoneId)
-  internal:dm("Debug", "OnZoneChanged")
-  lib.reticleInteractionName = nil
-  lib.lastInteractionTarget = nil
-  if internal:SetPlayerLocation() then
-    lib.callbackObject:FireCallbacks(lib.callbackType.EVENT_ZONE_CHANGED)
-  end
-  internal:UpdateMapInfo()
-end
-EVENT_MANAGER:RegisterForEvent(libName .. "_zone_changed", EVENT_ZONE_CHANGED, OnZoneChanged)
 
 local climbLocalization = {
   ["en"] = "Climb",
@@ -203,29 +273,42 @@ ZO_PreHook(ZO_Reticle, "TryHandlingInteraction", function(interactionPossible, c
   end
 end)
 
-local function OnWorldPositionChanged(eventCode, clientInteractResult, interactTargetName)
-  internal:dm("Debug", "OnWorldPositionChanged")
+--[[ added mostly for LibQuestData so hopefully eroneous names are not assigned
+to quest info for the NPC
+]]--
+local function OnPrepareForJump(eventCode, zoneName, zoneDescription, loadingTexture, instanceDisplayType)
   lib.reticleInteractionName = nil
   lib.lastInteractionTarget = nil
-  if internal:SetPlayerLocation() then
-    lib.callbackObject:FireCallbacks(lib.callbackType.EVENT_LINKED_WORLD_POSITION_CHANGED)
-  end
-  internal:UpdateMapInfo()
+  lib.onPrepareForJumpInProgress = true
+end
+EVENT_MANAGER:RegisterForEvent(libName .. "_OnPrepareForJump", EVENT_PREPARE_FOR_JUMP, OnPrepareForJump)
+
+local function OnZoneChanged(eventCode, zoneName, subZoneName, newSubzone, zoneId, subZoneId)
+  lib.reticleInteractionName = nil
+  lib.lastInteractionTarget = nil
+  lib.newSubzone = newSubzone
+  internal:SetUpSetPlayerLocationQueue()
+end
+EVENT_MANAGER:RegisterForEvent(libName .. "_zone_changed", EVENT_ZONE_CHANGED, OnZoneChanged)
+
+local function OnWorldPositionChanged(eventCode, clientInteractResult, interactTargetName)
+  lib.reticleInteractionName = nil
+  lib.lastInteractionTarget = nil
+  internal:SetUpSetPlayerLocationQueue()
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_OnWorldPositionChanged", EVENT_LINKED_WORLD_POSITION_CHANGED, OnWorldPositionChanged)
 
 local function OnPlayerActivated(eventCode, initial)
   if initial then
-    internal:SetPlayerLocation()
+    -- internal:dm("Debug", "->> initial Activattion <<-")
   end
   if not initial then
+    -- internal:dm("Debug", "- Not Initial Activattion clear target and reticle  -")
     lib.reticleInteractionName = nil
     lib.lastInteractionTarget = nil
-    if internal:SetPlayerLocation() then
-      lib.callbackObject:FireCallbacks(lib.callbackType.EVENT_PLAYER_ACTIVATED)
-    end
   end
-  internal:UpdateMapInfo()
+  lib.onPrepareForJumpInProgress = false
+  lib.onAddonLoadInProgress = false
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_activated", EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
 
@@ -236,28 +319,32 @@ end
 EVENT_MANAGER:RegisterForEvent(libName .. "_OnPlayerDeactivated", EVENT_PLAYER_DEACTIVATED, OnPlayerDeactivated)
 
 CALLBACK_MANAGER:RegisterCallback("OnWorldMapChanged", function()
-  internal:dm("Debug", "OnWorldMapChanged")
+  lib.SetMapToPlayerLocationQueueStart = 0
+  lib.setMapToPlayerLocationQueueInProgress = false
+  lib.lastMapId = lib.mapId
+  lib.lastMapTexture = lib.mapTexture
   internal:UpdateMapInfo()
-  lib.callbackObject:FireCallbacks(lib.callbackType.OnWorldMapChanged)
+  internal:SetWasSetMapToPlayerLocationCalledFalse()
+  internal:MapTextureMapIdUpdated()
 end)
 
 WORLD_MAP_SCENE:RegisterCallback("StateChange", function(oldState, newState)
-  internal:dm("Debug", "On StateChange")
+  lib.SetMapToPlayerLocationQueueStart = 0
+  lib.setMapToPlayerLocationQueueInProgress = false
   if newState == SCENE_SHOWING then
-    internal:UpdateMapInfo()
-    lib.callbackObject:FireCallbacks(lib.callbackType.WorldMapSceneStateChange)
+    -- internal:dm("Debug", "SCENE_SHOWING")
+    -- internal:UpdateMapInfo()
   elseif newState == SCENE_HIDDEN then
-    internal:SetPlayerLocation()
-    internal:UpdateMapInfo()
-    lib.callbackObject:FireCallbacks(lib.callbackType.WorldMapSceneStateChange)
+    -- internal:dm("Debug", "SCENE_HIDDEN")
+    -- internal:UpdateMapInfo()
+    internal:SetWasSetMapToPlayerLocationCalledFalse()
   end
 end)
 
 local function OnInteract(eventCode, result, interactTargetName)
-  --internal.dm("Debug", "OnInteract Occured")
-  --d(client_interact_result)
+  -- internal.dm("Debug", "OnInteract Occured")
   local text = zo_strformat(SI_CHAT_MESSAGE_FORMATTER, interactTargetName)
-  --internal.dm("Debug", text)
+  -- internal.dm("Debug", text)
   lib.lastInteractionTarget = text
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_OnInteract", EVENT_CLIENT_INTERACT_RESULT, OnInteract)
@@ -271,15 +358,6 @@ local function OnQuestSharred(eventCode, questID)
   lib.questShared = true
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_OnQuestSharred", EVENT_QUEST_SHARED, OnQuestSharred) -- Verified
-
---[[ added mostly for LibQuestData so hopefully eroneous names are not assigned
-to quest info for the NPC
-]]--
-local function OnPrepareForJump(eventCode, zoneName, zoneDescription, loadingTexture, instanceDisplayType)
-  lib.reticleInteractionName = nil
-  lib.lastInteractionTarget = nil
-end
-EVENT_MANAGER:RegisterForEvent(libName .. "_OnPrepareForJump", EVENT_PREPARE_FOR_JUMP, OnPrepareForJump)
 
 -----
 --- Check for multiple MapNames with different IDs
@@ -295,18 +373,6 @@ function internal:ContainsIndex(indexTable, indexToFind)
       if index == indexToFind then
         foundId = true
       end
-    end
-  end
-  return foundId
-end
-
-function internal:TableContainsIndex(indexTable, indexToFind)
-  if not indexToFind then return true end
-  local foundId = false
-  for _, index in pairs(indexTable) do
-    -- internal:dm("Debug", index)
-    if index == indexToFind then
-      foundId = true
     end
   end
   return foundId
@@ -416,7 +482,7 @@ local function BuildMapTextureNamesLookup()
 end
 
 local function BuildMapIndexTable()
-  internal:dm("Debug", "BuildMapIndexTable")
+  -- internal:dm("Debug", "BuildMapIndexTable")
 
   local built_table = {}
   local maxMapIndex = nil
@@ -438,14 +504,15 @@ local function BuildMapIndexTable()
       if maxMapIndex == nil or maxMapIndex < i then maxMapIndex = i end
     end
   end
-  internal:dm("Debug", maxMapIndex)
+  -- internal:dm("Debug", maxMapIndex)
+  -- internal:dm("Debug", i)
   LibMapData_SavedVariables = {}
   LibMapData_SavedVariables.mapIndexTable = {}
   LibMapData_SavedVariables.mapIndexTable = built_table
 end
 
 local function BuildZoneIdTable()
-  internal:dm("Debug", "BuildZoneIdTable")
+  -- internal:dm("Debug", "BuildZoneIdTable")
   local maxZoneId = nil
   for i = 1, 30000 do
     local zoneName = GetZoneNameById(i)
@@ -453,7 +520,7 @@ local function BuildZoneIdTable()
       if maxZoneId == nil or maxZoneId < i then maxZoneId = i end
     end
   end
-  internal:dm("Debug", maxZoneId)
+  -- internal:dm("Debug", maxZoneId)
 end
 
 local function GetPlayerPos()
@@ -522,6 +589,23 @@ local function OnAddOnLoaded(eventCode, addonName)
     BuildZoneNamesLookup()
     BuildMapTextureNames()
     BuildMapTextureNamesLookup()
+
+    -- internal:dm("Debug", "->> Initial SetUp <<-")
+    --[[Initial SetUp happens in OnAddOnLoaded because OnWorldPositionChanged
+    will run prior to OnPlayerActivated so using the 'initial' flag from that is useless here]]--
+    lib:SetMapIdFromAPI()
+    lib:GetMapTileTextureFromMapId(lib.mapId)
+    if lib.lastMapTexture == nil then lib.lastMapTexture = lib.mapTexture end
+    if lib.lastMapId == nil then lib.lastMapId = lib.mapId end
+    --[[newSubzone is true for some reason for OnAddOnLoaded prior to OnWorldPositionChanged
+    or OnPlayerActivated but it is only set in OnZoneChanged.
+
+    set setMapToPlayerLocationQueueInProgress also as it seems to be true after OnAddOnLoaded
+    as well.
+    ]]--
+    lib.newSubzone = false
+    lib.setMapToPlayerLocationQueueInProgress = false
+
   end
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_onload", EVENT_ADD_ON_LOADED, OnAddOnLoaded)
