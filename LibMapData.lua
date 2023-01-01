@@ -620,7 +620,7 @@ EVENT_MANAGER:RegisterForEvent(libName .. "_onload", EVENT_ADD_ON_LOADED, OnAddO
 -------------------------------------------------
 ----- Logger Function                       -----
 -------------------------------------------------
-internal.show_log = false
+internal.show_log = true
 if LibDebugLogger then
   internal.logger = LibDebugLogger.Create(libName)
 end
