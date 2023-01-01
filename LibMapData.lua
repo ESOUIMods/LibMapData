@@ -634,6 +634,7 @@ local function create_log(log_type, log_content)
     CHAT_ROUTER:AddSystemMessage(log_content)
     return
   end
+  if not internal.show_log then return end
   if logger and log_type == "Debug" then
     internal.logger:Debug(log_content)
   end
@@ -676,7 +677,6 @@ local function emit_table(log_type, t, indent, table_history)
 end
 
 function internal:dm(log_type, ...)
-  if not internal.show_log then return end
   for i = 1, select("#", ...) do
     local value = select(i, ...)
     if (type(value) == "table") then
