@@ -1,4 +1,4 @@
-local libName, libVersion = "LibMapData", 106
+local libName, libVersion = "LibMapData", 107
 local lib = {}
 local internal = {}
 _G["LibMapData"] = lib
@@ -37,6 +37,7 @@ lib.textureNamesLookup = {}
 lib.zoneIndex = nil
 lib.mapIndex = nil
 lib.mapId = nil
+lib.zoneMapId = nil
 lib.zoneId = nil
 lib.mapTexture = nil
 lib.isMainZone = nil
@@ -73,8 +74,9 @@ lib.MAX_ATTEMPT_MAP_UPDATE_SECONDS = 15
 --- API functions
 -----
 -- /script d(LibMapData:GetMapIdByTileTexture("glenumbra/ancientcarzogsdemise_base_0"))
--- /script d(GetMapTileTextureForMapId(1490, 1))
--- /script d(LibMapData:GetMapIdByMapName("Carzog's Demise"))
+-- /script d(GetMapTileTextureForMapId(1871, 1))
+-- /script d(LibMapData:GetMapIdByMapName("Zenithar's Abbey"))
+-- /script d(GetMapNameById(292))
 function lib:GetMapIdByTileTexture(tileTexture)
   if lib.textureNamesLookup[tileTexture] then return lib.textureNamesLookup[tileTexture] end
 end
@@ -218,8 +220,10 @@ function internal:UpdateMapInfo()
   -- no lib.mapId = because this sets the global variable lib.mapId
   lib:SetMapIdFromAPI()
   local zoneId = GetZoneId(zoneIndex)
+  local zoneMapId = lib:GetZoneMapIdFromZoneId(zoneId)
   local currentFloor, numFloors = GetMapFloorInfo()
 
+  lib.zoneMapId = zoneMapId
   lib.zoneIndex = zoneIndex
   lib.mapIndex = mapIndex
   --[[We do not set the mapId because of SetMapIdFromAPI() ]]--
@@ -540,6 +544,7 @@ local function GetPlayerPos()
   if lib.zoneId then internal:dm("Debug", "ZoneId: " .. lib.zoneId) end
   if lib.mapIndex then internal:dm("Debug", "MapIndex: " .. lib.mapIndex) end
   if lib.mapId then internal:dm("Debug", "mapId: " .. lib.mapId) end
+  if lib.zoneMapId then internal:dm("Debug", "zoneMapId: " .. lib.zoneMapId) end
   if lib.zoneIndex then internal:dm("Debug", "zoneIndex: " .. lib.zoneIndex) end
   internal:dm("Debug", "isDungeon: " .. tostring(lib.isDungeon))
   internal:dm("Debug", "isMainZone: " .. tostring(lib.isMainZone))
@@ -592,9 +597,11 @@ local function OnAddOnLoaded(eventCode, addonName)
 
     -- internal:dm("Debug", "->> Initial SetUp <<-")
     --[[Initial SetUp happens in OnAddOnLoaded because OnWorldPositionChanged
-    will run prior to OnPlayerActivated so using the 'initial' flag from that is useless here]]--
-    lib:SetMapIdFromAPI()
-    lib:GetMapTileTextureFromMapId(lib.mapId)
+    will run prior to OnPlayerActivated so using the 'initial' flag from that is useless
+    to initialize everything. Using UpdateMapInfo here is a bit overkill but needed for
+    Lorebooks because it requires that the ZoneId is set to get the parent MapId
+    ]]--
+    internal:UpdateMapInfo()
     if lib.lastMapTexture == nil then lib.lastMapTexture = lib.mapTexture end
     if lib.lastMapId == nil then lib.lastMapId = lib.mapId end
     --[[newSubzone is true for some reason for OnAddOnLoaded prior to OnWorldPositionChanged
@@ -610,10 +617,13 @@ local function OnAddOnLoaded(eventCode, addonName)
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_onload", EVENT_ADD_ON_LOADED, OnAddOnLoaded)
 
+-------------------------------------------------
+----- Logger Function                       -----
+-------------------------------------------------
+internal.show_log = false
 if LibDebugLogger then
-  lib.logger = LibDebugLogger.Create(libName)
+  internal.logger = LibDebugLogger.Create(libName)
 end
-
 local logger
 local viewer
 if DebugLogViewer then viewer = true else viewer = false end
@@ -625,16 +635,16 @@ local function create_log(log_type, log_content)
     return
   end
   if logger and log_type == "Debug" then
-    lib.logger:Debug(log_content)
+    internal.logger:Debug(log_content)
   end
   if logger and log_type == "Info" then
-    lib.logger:Info(log_content)
+    internal.logger:Info(log_content)
   end
   if logger and log_type == "Verbose" then
-    lib.logger:Verbose(log_content)
+    internal.logger:Verbose(log_content)
   end
   if logger and log_type == "Warn" then
-    lib.logger:Warn(log_content)
+    internal.logger:Warn(log_content)
   end
 end
 
@@ -666,6 +676,7 @@ local function emit_table(log_type, t, indent, table_history)
 end
 
 function internal:dm(log_type, ...)
+  if not internal.show_log then return end
   for i = 1, select("#", ...) do
     local value = select(i, ...)
     if (type(value) == "table") then

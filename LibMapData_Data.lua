@@ -189,7 +189,26 @@ lib.the_RiftData = {
 lib.eastmarchData = {
   ["subZones"] = { },
   ["dungeons"] = { },
-  ["events"] = { },
+  ["events"] = {
+    [61] = {
+      ["Petronius Galenus"] = {
+        x = 0.48735749721527,
+        y = 0.37827250361443,
+      },
+      ["Breda"] = {
+        x = 0.48691499233246,
+        y = 0.38149499893188,
+      },
+      ["Selvari Abello"] = {
+        x = 0.48738500475883,
+        y = 0.38356500864029,
+      },
+      ["Raeififeh"] = {
+        x = 0.48627999424934,
+        y = 0.37936249375343,
+      },
+    },
+  },
 }
 
 lib.cyrodiilData = {
