@@ -1,4 +1,4 @@
-local libName, libVersion = "LibMapData", 107
+local libName, libVersion = "LibMapData", 108
 local lib = {}
 local internal = {}
 _G["LibMapData"] = lib
@@ -28,6 +28,7 @@ function lib:FireCallbacks(...)
   return callbackObject:FireCallbacks(...)
 end
 
+lib.mapType = nil
 lib.mapNames = {}
 lib.mapNamesLookup = {}
 lib.zoneNames = {}
@@ -123,6 +124,12 @@ function lib:SetMapIdFromAPI()
   lib.mapId = GetCurrentMapId()
 end
 
+function lib:IsOverlandMap()
+  if not lib.mapIndex then return false end
+  if lib.mapIndexData[lib.mapIndex]["mapIndex"] == lib.mapIndex and lib.mapIndexData[lib.mapIndex]["mapTexture"] == lib.mapTexture then return true end
+  return false
+end
+
 -----
 --- Internal Callback Functions for Queue
 -----
@@ -215,6 +222,9 @@ end
 
 -- /script LibMapData_Internal:UpdateMapInfo()
 function internal:UpdateMapInfo()
+  local mapType = MAPTYPE_NONE
+  local mapTypeFound = GetMapType()
+  if mapTypeFound ~= nil then mapType = mapTypeFound end
   local zoneIndex = GetCurrentMapZoneIndex()
   local mapIndex = GetCurrentMapIndex()
   -- no lib.mapId = because this sets the global variable lib.mapId
@@ -223,6 +233,7 @@ function internal:UpdateMapInfo()
   local zoneMapId = lib:GetZoneMapIdFromZoneId(zoneId)
   local currentFloor, numFloors = GetMapFloorInfo()
 
+  lib.mapType = mapType
   lib.zoneMapId = zoneMapId
   lib.zoneIndex = zoneIndex
   lib.mapIndex = mapIndex
@@ -530,6 +541,8 @@ end
 local function GetPlayerPos()
   internal:dm("Debug", "-----")
   internal:dm("Debug", "GetPlayerPos")
+  local currentLogSetting = internal.show_log
+  internal.show_log = true
   internal:UpdateMapInfo()
 
   local x, y = GetMapPlayerPosition("player")
@@ -575,6 +588,7 @@ local function GetPlayerPos()
 
   --local distance = zo_round(GPS:GetLocalDistanceInMeters(0.6388558745, 0.5947756767, 0.63227427005768, 0.70292204618454))
   --d(distance)
+  internal.show_log = currentLogSetting
 end
 
 local function OnAddOnLoaded(eventCode, addonName)
