@@ -1,7 +1,7 @@
 ## Title: LibMapData
 ## Author: Sharlikran
-## Version: 1.08
-## AddOnVersion: 108
+## Version: 1.09
+## AddOnVersion: 109
 ## IsLibrary: true
 ## APIVersion: 101035 101036
 ## SavedVariables: LibMapData_SavedVariables

@@ -1,4 +1,4 @@
-local libName, libVersion = "LibMapData", 108
+local libName, libVersion = "LibMapData", 109
 local lib = {}
 local internal = {}
 _G["LibMapData"] = lib
@@ -249,7 +249,7 @@ function internal:UpdateMapInfo()
   local name, mapType, mapContentType, zoneIndex, description = GetMapInfoById(lib.mapId)
   lib.isMainZone = mapType == MAPTYPE_ZONE
   lib.isSubzone = mapType == MAPTYPE_SUBZONE
-  lib.isWorld = mapType == MAPTYPE_WORLD
+  lib.isWorld = mapType == MAPTYPE_WORLD or mapType == MAPTYPE_COSMIC
   lib.isDungeon = mapContentType == MAP_CONTENT_DUNGEON
 
   local zoneName = GetZoneNameByIndex(zoneIndex)
@@ -541,6 +541,9 @@ end
 local function GetPlayerPos()
   internal:dm("Debug", "-----")
   internal:dm("Debug", "GetPlayerPos")
+  if lib.lastInteractionTarget ~= nil then internal:dm("Debug", "Last Interaction Target: " .. lib.lastInteractionTarget) end
+  if lib.reticleInteractionName ~= nil then internal:dm("Debug", "Reticle Interaction Name: " .. lib.reticleInteractionName) end
+
   local currentLogSetting = internal.show_log
   internal.show_log = true
   internal:UpdateMapInfo()
@@ -552,8 +555,7 @@ local function GetPlayerPos()
   internal:dm("Debug", lib.mapTexture)
   if lib.zoneName then internal:dm("Debug", "zoneName: " .. lib.zoneName) end
   if lib.mapName then internal:dm("Debug", "mapName: " .. lib.mapName) end
-  if subzoneName then internal:dm("Debug", "***subzoneName: " .. lib.subzoneName) end
-
+  if subzoneName then internal:dm("Debug", "subzoneName: " .. lib.subzoneName) end
   if lib.zoneId then internal:dm("Debug", "ZoneId: " .. lib.zoneId) end
   if lib.mapIndex then internal:dm("Debug", "MapIndex: " .. lib.mapIndex) end
   if lib.mapId then internal:dm("Debug", "mapId: " .. lib.mapId) end
