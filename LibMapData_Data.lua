@@ -49,6 +49,8 @@ LIBMAPDATA_THE_DEADLANDS_PSEUDOMAPINDEX = 45
 LIBMAPDATA_HIGH_ISLE_PSEUDOMAPINDEX = 46
 LIBMAPDATA_FARGRAVE_CITY_PSEUDOMAPINDEX = 47
 LIBMAPDATA_GALEN_PSEUDOMAPINDEX = 48
+LIBMAPDATA_TELVANNI_PENINSULA_PSEUDOMAPINDEX = 49
+LIBMAPDATA_APOCRYPHA_PSEUDOMAPINDEX = 50
 
 lib.tamrielData = {
   ["subZones"] = { 108, },
@@ -165,8 +167,8 @@ lib.stonefallsData = {
         y = 0.4024004340,
       },
       ["Chef_Donolon"] = {
-        x = 0.9166180491,
-        y = 0.3022293746,
+        x = 0.7826786637,
+        y = 0.2969335913,
       },
       ["Witchmother Olyve"] = {
         x = 0.4950504899,
@@ -714,6 +716,18 @@ lib.galenData = {
   ["events"] = { },
 }
 
+lib.telvanniPeninsulaData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
+}
+
+lib.apocryphaData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
+}
+
 lib.mapIndexData = {
   [1] = {
     ["mapTexture"] = "",
@@ -1165,4 +1179,24 @@ lib.mapIndexData = {
     ["zoneId"] = 1383,
     ["mapsData"] = lib.galenData,
   },
+        [49] =
+        {
+            ["mapTexture"] = "Art/maps/telvanni/u38_telvannipeninsula_base_0.dds",
+            ["mapIndex"] = 49,
+            ["mapId"] = 2274,
+            ["zoneIndex"] = 958,
+            ["zoneName"] = "Telvanni Peninsula",
+            ["zoneId"] = 1414,
+    ["mapsData"] = lib.telvanniPeninsulaData,
+        },
+        [50] =
+        {
+            ["mapTexture"] = "Art/maps/apocrypha/u38_apocrypha_base_0.dds",
+            ["mapIndex"] = 50,
+            ["mapId"] = 2275,
+            ["zoneIndex"] = 957,
+            ["zoneName"] = "Apocrypha",
+            ["zoneId"] = 1413,
+    ["mapsData"] = lib.apocryphaData,
+        },
 }

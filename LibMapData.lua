@@ -1,4 +1,4 @@
-local libName, libVersion = "LibMapData", 110
+local libName, libVersion = "LibMapData", 111
 local lib = {}
 local internal = {}
 _G["LibMapData"] = lib
@@ -64,10 +64,10 @@ lib.onAddonLoadInProgress = true
 lib.SetMapToPlayerLocationQueueStart = 0
 
 lib.MAPINDEX_MIN = 1
-lib.MAPINDEX_MAX = 48 -- 45, 46
-lib.MAX_NUM_MAPIDS = 2314 -- 2192, 2223
-lib.MAX_NUM_ZONEINDEXES = 931 -- 881, 907
-lib.MAX_NUM_ZONEIDS = 1387 -- 1345, 1364
+lib.MAPINDEX_MAX = 50 -- 45, 46, 48
+lib.MAX_NUM_MAPIDS = 2406 -- 2192, 2223, 2314
+lib.MAX_NUM_ZONEINDEXES = 972 -- 881, 907, 931
+lib.MAX_NUM_ZONEIDS = 1435 -- 1345, 1364, 1387
 -- max zoneId 1345 using valid zoneIndex
 lib.MAX_ATTEMPT_MAP_UPDATE_SECONDS = 15
 
