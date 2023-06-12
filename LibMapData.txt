@@ -5,7 +5,7 @@
 ## IsLibrary: true
 ## APIVersion: 101037 101038
 ## SavedVariables: LibMapData_SavedVariables
-## DependsOn: LibGPS>=68
+## DependsOn: LibGPS>=69
 ## OptionalDependsOn: LibDebugLogger>=220 DebugLogViewer>=558
 
 ## This Add-on is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates.
