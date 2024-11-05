@@ -52,6 +52,7 @@ LIBMAPDATA_GALEN_PSEUDOMAPINDEX = 48
 LIBMAPDATA_TELVANNI_PENINSULA_PSEUDOMAPINDEX = 49
 LIBMAPDATA_APOCRYPHA_PSEUDOMAPINDEX = 50
 LIBMAPDATA_WESTWEALD_PSEUDOMAPINDEX = 51
+LIBMAPDATA_EYEVEA_PSEUDOMAPINDEX = 52
 
 lib.tamrielData = {
   ["subZones"] = { 108, },
@@ -735,9 +736,15 @@ lib.westWealdData = {
   ["events"] = { },
 }
 
+lib.eyeveaData = {
+  ["subZones"] = { },
+  ["dungeons"] = { },
+  ["events"] = { },
+}
+
 lib.mapIndexData = {
   [1] = {
-    ["mapTexture"] = "",
+    ["mapTexture"] = "tamriel/Tamriel_0",
     ["mapIndex"] = 1,
     ["mapId"] = 27, -- 0 zoneInfo
     ["zoneIndex"] = 1,
@@ -944,7 +951,7 @@ lib.mapIndexData = {
     ["mapsData"] = lib.coldharbourData,
   },
   [24] = {
-    ["mapTexture"] = "",
+    ["mapTexture"] = "tamriel/mundus_base_0",
     ["mapIndex"] = 24,
     ["mapId"] = 439, -- 0 zoneInfo
     ["zoneIndex"] = 1,
@@ -1089,7 +1096,7 @@ lib.mapIndexData = {
   },
   [40] = -- nil dungeon nil main zone
   {
-    ["mapTexture"] = "",
+    ["mapTexture"] = "skyrim/blackreachworld_base_0",
     ["mapIndex"] = 40,
     ["mapId"] = 1782, -- 0 zoneInfo
     ["zoneIndex"] = 1,
@@ -1187,7 +1194,7 @@ lib.mapIndexData = {
     ["mapsData"] = lib.galenData,
   },
   [49] = {
-    ["mapTexture"] = "Art/maps/telvanni/u38_telvannipeninsula_base_0.dds",
+    ["mapTexture"] = "telvanni/u38_telvannipeninsula_base_0",
     ["mapIndex"] = 49,
     ["mapId"] = 2274,
     ["zoneIndex"] = 958,
@@ -1196,7 +1203,7 @@ lib.mapIndexData = {
     ["mapsData"] = lib.telvanniPeninsulaData,
   },
   [50] = {
-    ["mapTexture"] = "Art/maps/apocrypha/u38_apocrypha_base_0.dds",
+    ["mapTexture"] = "apocrypha/u38_apocrypha_base_0",
     ["mapIndex"] = 50,
     ["mapId"] = 2275,
     ["zoneIndex"] = 957,
@@ -1205,12 +1212,21 @@ lib.mapIndexData = {
     ["mapsData"] = lib.apocryphaData,
   },
   [51] = {
-    ["mapTexture"] = "Art/maps/westweald/westwealdoverland_base_0.dds",
+    ["mapTexture"] = "westweald/westwealdoverland_base_0",
     ["mapIndex"] = 51,
     ["mapId"] = 2427,
     ["zoneIndex"] = 982,
     ["zoneName"] = "West Weald",
     ["zoneId"] = 1443,
     ["mapsData"] = lib.westWealdData,
+  },
+  [52] = {
+    ["mapTexture"] = "guildmaps/eyevea_base_0",
+    ["mapIndex"] = 52,
+    ["mapId"] = 108,
+    ["zoneIndex"] = 100,
+    ["zoneName"] = "Eyevea",
+    ["zoneId"] = 267,
+    ["mapsData"] = lib.eyeveaData,
   },
 }
