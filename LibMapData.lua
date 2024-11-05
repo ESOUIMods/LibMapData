@@ -1,4 +1,4 @@
-local libName, libVersion = "LibMapData", 112
+local libName, libVersion = "LibMapData", 113
 local lib = {}
 local internal = {}
 _G["LibMapData"] = lib
@@ -64,10 +64,10 @@ lib.onAddonLoadInProgress = true
 lib.SetMapToPlayerLocationQueueStart = 0
 
 lib.MAPINDEX_MIN = 1
-lib.MAPINDEX_MAX = 50 -- 45, 46, 48
-lib.MAX_NUM_MAPIDS = 2406 -- 2192, 2223, 2314
-lib.MAX_NUM_ZONEINDEXES = 972 -- 881, 907, 931
-lib.MAX_NUM_ZONEIDS = 1435 -- 1345, 1364, 1387
+lib.MAPINDEX_MAX = 51 -- 45, 46, 48, 50
+lib.MAX_NUM_MAPIDS = 2619 -- 2192, 2223, 2314, 2406
+lib.MAX_NUM_ZONEINDEXES = 1018 -- 881, 907, 931, 972
+lib.MAX_NUM_ZONEIDS = 1492 -- 1345, 1364, 1387, 1435
 -- max zoneId 1345 using valid zoneIndex
 lib.MAX_ATTEMPT_MAP_UPDATE_SECONDS = 15
 
@@ -357,9 +357,9 @@ WORLD_MAP_SCENE:RegisterCallback("StateChange", function(oldState, newState)
 end)
 
 local function OnInteract(eventCode, result, interactTargetName)
-  -- internal.dm("Debug", "OnInteract Occured")
+  -- internal:dm("Debug", "OnInteract Occured")
   local text = zo_strformat(SI_CHAT_MESSAGE_FORMATTER, interactTargetName)
-  -- internal.dm("Debug", text)
+  -- internal:dm("Debug", text)
   lib.lastInteractionTarget = text
 end
 EVENT_MANAGER:RegisterForEvent(libName .. "_OnInteract", EVENT_CLIENT_INTERACT_RESULT, OnInteract)
@@ -398,7 +398,7 @@ end
 -----
 
 local function BuildMapNames()
-  --internal:dm("Debug", "BuildMapNames")
+  -- internal:dm("Debug", "BuildMapNames")
   local maxMapId = nil
   local mapName
   for i = 1, lib.MAX_NUM_MAPIDS do
@@ -408,7 +408,7 @@ local function BuildMapNames()
       if maxMapId == nil or maxMapId < i then maxMapId = i end
     end
   end
-  --internal:dm("Debug", maxMapId)
+  -- internal:dm("Debug", string.format("maxMapId: %s", maxMapId))
 end
 
 --[[ this lookup builds a table for each map name containing all the
@@ -434,7 +434,7 @@ end
 -----
 
 local function BuildZoneNames()
-  --internal:dm("Debug", "BuildZoneNames")
+  -- internal:dm("Debug", "BuildZoneNames")
   local maxZoneIndex = nil
   local maxZoneId = nil
   local zoneId = nil
@@ -447,8 +447,8 @@ local function BuildZoneNames()
       if maxZoneId == nil or maxZoneId < zoneId then maxZoneId = zoneId end
     end
   end
-  --internal:dm("Debug", maxZoneIndex)
-  --internal:dm("Debug", maxZoneId)
+  -- internal:dm("Debug", string.format("maxZoneIndex: %s", maxZoneIndex))
+  -- internal:dm("Debug", string.format("maxZoneId: %s", maxZoneId))
 end
 
 local function BuildZoneNamesLookup()
@@ -519,8 +519,7 @@ local function BuildMapIndexTable()
       if maxMapIndex == nil or maxMapIndex < i then maxMapIndex = i end
     end
   end
-  -- internal:dm("Debug", maxMapIndex)
-  -- internal:dm("Debug", i)
+  -- internal:dm("Debug", string.format("maxMapIndex: %s", maxMapIndex))
   LibMapData_SavedVariables = {}
   LibMapData_SavedVariables.mapIndexTable = {}
   LibMapData_SavedVariables.mapIndexTable = built_table
@@ -535,7 +534,7 @@ local function BuildZoneIdTable()
       if maxZoneId == nil or maxZoneId < i then maxZoneId = i end
     end
   end
-  -- internal:dm("Debug", maxZoneId)
+  -- internal:dm("Debug", string.format("maxZoneId: %s", maxZoneId))
 end
 
 local function GetPlayerPos()
@@ -555,7 +554,7 @@ local function GetPlayerPos()
   internal:dm("Debug", lib.mapTexture)
   if lib.zoneName then internal:dm("Debug", "zoneName: " .. lib.zoneName) end
   if lib.mapName then internal:dm("Debug", "mapName: " .. lib.mapName) end
-  if subzoneName then internal:dm("Debug", "subzoneName: " .. lib.subzoneName) end
+  if lib.subzoneName then internal:dm("Debug", "subzoneName: " .. lib.subzoneName) end
   if lib.zoneId then internal:dm("Debug", "ZoneId: " .. lib.zoneId) end
   if lib.mapIndex then internal:dm("Debug", "MapIndex: " .. lib.mapIndex) end
   if lib.mapId then internal:dm("Debug", "mapId: " .. lib.mapId) end
